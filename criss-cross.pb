@@ -15,19 +15,42 @@ Repeat
     Case #PB_Event_Gadget
       If hod%2
         btnTxt$ = "O"
+        param = 0
       Else
         btnTxt$ = "X"
+        param = 1
       EndIf 
       For i = 1 To 9
         Select EventGadget()
           Case i
             hod+1
             SetGadgetText(i,btnTxt$)
-            Debug Result$
+            DisableGadget(i,1)
+            ;Result$ = Str(i)+btnTxt$+Result$ 
+            ;Debug Result$
         EndSelect
-        Next
-      For i = 1 To 9
-        Result$+GetGadgetText(i)
       Next
+      WIN$ = "Ничо не записалось"
+      If hod>8
+        ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
+        ;ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
+        ;ocs$ = GetGadgetText(1)+GetGadgetText(4)+GetGadgetText(7)
+        ;tfe$ = GetGadgetText(2)+GetGadgetText(5)+GetGadgetText(8)
+        ;tfs$ = GetGadgetText(3)+GetGadgetText(5)+GetGadgetText(7)
+        ;cfi$ = GetGadgetText(4)+GetGadgetText(5)+GetGadgetText(6)
+        ;tin$ = GetGadgetText(3)+GetGadgetText(6)+GetGadgetText(9)
+        ;sen$ = GetGadgetText(7)+GetGadgetText(8)+GetGadgetText(9)
+        ;xxx$ = "XXX"
+
+        If ott$ = "XXX"
+          WIN$ = "Выиграли крестики"
+        Else
+          WIN$ = "Я хз"
+        EndIf
+        MessageRequester("Всё",WIN$)
+        ;For i = 1 To 9
+        ;  Result$+GetGadgetText(i)
+        ;Next
+      EndIf
   EndSelect
 Until eee = #PB_Event_CloseWindow
