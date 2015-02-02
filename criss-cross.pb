@@ -1,56 +1,94 @@
 ; крестики-нолики
-OpenWindow(0,100,100,300,300,"Крестики-нолики")
-ButtonGadget(1,0  ,0  ,100,100,"1")
-ButtonGadget(2,100,0  ,100,100,"2")
-ButtonGadget(3,200,0  ,100,100,"3")
-ButtonGadget(4,0  ,100,100,100,"4")
-ButtonGadget(5,100,100,100,100,"5")
-ButtonGadget(6,200,100,100,100,"6")
-ButtonGadget(7,0  ,200,100,100,"7")
-ButtonGadget(8,100,200,100,100,"8")
-ButtonGadget(9,200,200,100,100,"9")
+OpenWindow(0,100,100,300,320,"Крестики-нолики")
+btnTxt$ = "Press"
+ButtonGadget(1,0  ,0  ,100,100,btnTxt$)
+ButtonGadget(2,100,0  ,100,100,btnTxt$)
+ButtonGadget(3,200,0  ,100,100,btnTxt$)
+ButtonGadget(4,0  ,100,100,100,btnTxt$)
+ButtonGadget(5,100,100,100,100,btnTxt$)
+ButtonGadget(6,200,100,100,100,btnTxt$)
+ButtonGadget(7,0  ,200,100,100,btnTxt$)
+ButtonGadget(8,100,200,100,100,btnTxt$)
+ButtonGadget(9,200,200,100,100,btnTxt$)
+TextGadget(10,0,300,300,20,"F5 - restart, Esc - quit",#PB_Text_Center)
 Repeat
   eee = WaitWindowEvent()
-  Select eee
-    Case #PB_Event_Gadget
-      If hod%2
-        btnTxt$ = "O"
-        param = 0
-      Else
-        btnTxt$ = "X"
-        param = 1
-      EndIf 
-      For i = 1 To 9
-        Select EventGadget()
-          Case i
-            hod+1
-            SetGadgetText(i,btnTxt$)
-            DisableGadget(i,1)
-            ;Result$ = Str(i)+btnTxt$+Result$ 
-            ;Debug Result$
-        EndSelect
+  If CreatePopupMenu(0)
+    MenuItem(1, "Restart")
+    MenuItem(2, "Quit")
+  EndIf
+  If eee = #PB_Event_Menu 
+    Select EventMenu() 
+        Case 1
+          restart = 1
+        Case 2
+          eee = #PB_Event_CloseWindow
+      EndSelect
+  EndIf
+  AddKeyboardShortcut(0, #PB_Shortcut_F5, 1)
+  AddKeyboardShortcut(0, #PB_Shortcut_Escape, 2)
+  If restart
+    restart = 0
+    hod = 0
+    For i = 1 To 9
+      btnTxt$ = "Press"
+      SetGadgetText(i,btnTxt$)
+      DisableGadget(i,0)
       Next
-      WIN$ = "Ничо не записалось"
-      If hod>8
-        ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
-        ;ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
-        ;ocs$ = GetGadgetText(1)+GetGadgetText(4)+GetGadgetText(7)
-        ;tfe$ = GetGadgetText(2)+GetGadgetText(5)+GetGadgetText(8)
-        ;tfs$ = GetGadgetText(3)+GetGadgetText(5)+GetGadgetText(7)
-        ;cfi$ = GetGadgetText(4)+GetGadgetText(5)+GetGadgetText(6)
-        ;tin$ = GetGadgetText(3)+GetGadgetText(6)+GetGadgetText(9)
-        ;sen$ = GetGadgetText(7)+GetGadgetText(8)+GetGadgetText(9)
-        ;xxx$ = "XXX"
-
-        If ott$ = "XXX"
-          WIN$ = "Выиграли крестики"
-        Else
-          WIN$ = "Я хз"
-        EndIf
-        MessageRequester("Всё",WIN$)
-        ;For i = 1 To 9
-        ;  Result$+GetGadgetText(i)
-        ;Next
-      EndIf
-  EndSelect
-Until eee = #PB_Event_CloseWindow
+    Else
+      Select eee
+        Case #PB_Event_Gadget
+          If hod%2
+            btnTxt$ = "O"
+            param = 0
+          Else
+            btnTxt$ = "X"
+            param = 1
+          EndIf 
+          For i = 1 To 9
+            Select EventGadget()
+              Case i
+                hod+1
+                SetGadgetText(i,btnTxt$)
+                DisableGadget(i,1)
+                ;Result$ = Str(i)+btnTxt$+Result$ 
+                ;Debug Result$
+            EndSelect
+          Next
+          If hod>8
+            MessageRequester("Всё","Ничья")
+          EndIf
+            ; это код который делает из состояний наших кнопок девяти-значное число из 1 и 0
+            For i = 1 To 9
+              peremennaya$ = GetGadgetText(i)
+              If peremennaya$ = "X"
+                param = 1
+              Else 
+                param = 0
+              EndIf
+              sostoyanie$ = sostoyanie$ + param
+            Next
+            
+            ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
+            ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
+            ocs$ = GetGadgetText(1)+GetGadgetText(4)+GetGadgetText(7)
+            tfe$ = GetGadgetText(2)+GetGadgetText(5)+GetGadgetText(8)
+            tfs$ = GetGadgetText(3)+GetGadgetText(5)+GetGadgetText(7)
+            cfi$ = GetGadgetText(4)+GetGadgetText(5)+GetGadgetText(6)
+            tin$ = GetGadgetText(3)+GetGadgetText(6)+GetGadgetText(9)
+            sen$ = GetGadgetText(7)+GetGadgetText(8)+GetGadgetText(9)
+            xxx$ = "XXX"
+            ooo$ = "OOO"
+            
+            If ott$ = xxx$ Or ofn$ = xxx$ Or ocs$ = xxx$ Or tfe$ = xxx$ Or tfs$ = xxx$ Or cfi$ = xxx$ Or tin$ = xxx$ Or sen$ = xxx$
+              MessageRequester("Всё","Крестики выиграли ")
+            ElseIf ott$ = ooo$ Or ofn$ = ooo$ Or ocs$ = ooo$ Or tfe$ = ooo$ Or tfs$ = ooo$ Or cfi$ = ooo$ Or tin$ = ooo$ Or sen$ = ooo$
+              MessageRequester("Всё","Нолики выиграли ")
+            EndIf
+            
+            ;For i = 1 To 9
+            ;  Result$+GetGadgetText(i)
+            ;Next
+      EndSelect
+    EndIf
+  Until eee = #PB_Event_CloseWindow
