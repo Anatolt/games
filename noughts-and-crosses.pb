@@ -1,4 +1,4 @@
-; крестики-нолики v0.2 bugfix
+; крестики-нолики v0.3 bugfix
 OpenWindow(0,100,100,300,320,"Крестики-нолики")
 btnTxt$ = "Press"
 ButtonGadget(1,0  ,0  ,100,100,btnTxt$)
@@ -10,7 +10,7 @@ ButtonGadget(6,200,100,100,100,btnTxt$)
 ButtonGadget(7,0  ,200,100,100,btnTxt$)
 ButtonGadget(8,100,200,100,100,btnTxt$)
 ButtonGadget(9,200,200,100,100,btnTxt$)
-TextGadget(10,0,300,300,20,"v0.2  |  F5 - restart, Esc - quit",#PB_Text_Center)
+TextGadget(10,0,300,300,20,"v0.3  |  F5 - restart, Esc - quit",#PB_Text_Center)
 Repeat
   eee = WaitWindowEvent()
   If CreatePopupMenu(0)
@@ -53,16 +53,6 @@ Repeat
               DisableGadget(i,1)
           EndSelect
         Next
-        ; это код который делает из состояний наших кнопок девяти-значное число из 1 и 0. Он бесполезный, но прикольный
-        For i = 1 To 9
-          peremennaya$ = GetGadgetText(i)
-          If peremennaya$ = "X"
-            param = 1
-          Else 
-            param = 0
-          EndIf
-          sostoyanie$ = sostoyanie$ + param
-        Next
         
         ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
         ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
@@ -77,8 +67,14 @@ Repeat
         
         If ott$ = xxx$ Or ofn$ = xxx$ Or ocs$ = xxx$ Or tfe$ = xxx$ Or tfs$ = xxx$ Or cfi$ = xxx$ Or tin$ = xxx$ Or sen$ = xxx$
           MessageRequester("Всё","Крестики выиграли ")
+            For i = 1 To 9
+              DisableGadget(i,1)
+            Next
         ElseIf ott$ = ooo$ Or ofn$ = ooo$ Or ocs$ = ooo$ Or tfe$ = ooo$ Or tfs$ = ooo$ Or cfi$ = ooo$ Or tin$ = ooo$ Or sen$ = ooo$
           MessageRequester("Всё","Нолики выиграли ")
+            For i = 1 To 9
+              DisableGadget(i,1)
+            Next
         Else
           If hod>8
             MessageRequester("Всё","Ничья")
