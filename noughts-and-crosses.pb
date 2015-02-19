@@ -11,12 +11,11 @@ ButtonGadget(7,0  ,200,100,100,btnTxt$)
 ButtonGadget(8,100,200,100,100,btnTxt$)
 ButtonGadget(9,200,200,100,100,btnTxt$)
 TextGadget(10,0,300,300,20,"v0.3  |  F5 - restart, Esc - quit",#PB_Text_Center)
+CreatePopupMenu(0)
+MenuItem(1, "Restart")
+MenuItem(2, "Quit")
 Repeat
   eee = WaitWindowEvent()
-  If CreatePopupMenu(0)
-    MenuItem(1, "Restart")
-    MenuItem(2, "Quit")
-  EndIf
   If eee = #PB_Event_Menu 
     Select EventMenu() 
       Case 1
@@ -35,52 +34,47 @@ Repeat
       SetGadgetText(i,btnTxt$)
       DisableGadget(i,0)
     Next
-  Else
-    Select eee
-      Case #PB_Event_Gadget
-        If hod%2
-          btnTxt$ = "O"
-          param = 0
-        Else
-          btnTxt$ = "X"
-          param = 1
-        EndIf 
-        For i = 1 To 9
-          Select EventGadget()
-            Case i
-              hod+1
-              SetGadgetText(i,btnTxt$)
-              DisableGadget(i,1)
-          EndSelect
-        Next
-        
-        ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
-        ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
-        ocs$ = GetGadgetText(1)+GetGadgetText(4)+GetGadgetText(7)
-        tfe$ = GetGadgetText(2)+GetGadgetText(5)+GetGadgetText(8)
-        tfs$ = GetGadgetText(3)+GetGadgetText(5)+GetGadgetText(7)
-        cfi$ = GetGadgetText(4)+GetGadgetText(5)+GetGadgetText(6)
-        tin$ = GetGadgetText(3)+GetGadgetText(6)+GetGadgetText(9)
-        sen$ = GetGadgetText(7)+GetGadgetText(8)+GetGadgetText(9)
-        xxx$ = "XXX"
-        ooo$ = "OOO"
-        
-        If ott$ = xxx$ Or ofn$ = xxx$ Or ocs$ = xxx$ Or tfe$ = xxx$ Or tfs$ = xxx$ Or cfi$ = xxx$ Or tin$ = xxx$ Or sen$ = xxx$
-          MessageRequester("Всё","Крестики выиграли ")
-            For i = 1 To 9
-              DisableGadget(i,1)
-            Next
-        ElseIf ott$ = ooo$ Or ofn$ = ooo$ Or ocs$ = ooo$ Or tfe$ = ooo$ Or tfs$ = ooo$ Or cfi$ = ooo$ Or tin$ = ooo$ Or sen$ = ooo$
-          MessageRequester("Всё","Нолики выиграли ")
-            For i = 1 To 9
-              DisableGadget(i,1)
-            Next
-        Else
-          If hod>8
-            MessageRequester("Всё","Ничья")
-          EndIf
-        EndIf
-        
-    EndSelect
+  ElseIf eee = #PB_Event_Gadget
+    If hod%2
+      btnTxt$ = "O"
+    Else
+      btnTxt$ = "X"
+    EndIf 
+    For i = 1 To 9
+      Select EventGadget()
+        Case i
+          hod+1
+          SetGadgetText(i,btnTxt$)
+          DisableGadget(i,1)
+      EndSelect
+    Next
+    
+    ott$ = GetGadgetText(1)+GetGadgetText(2)+GetGadgetText(3)
+    ofn$ = GetGadgetText(1)+GetGadgetText(5)+GetGadgetText(9)
+    ocs$ = GetGadgetText(1)+GetGadgetText(4)+GetGadgetText(7)
+    tfe$ = GetGadgetText(2)+GetGadgetText(5)+GetGadgetText(8)
+    tfs$ = GetGadgetText(3)+GetGadgetText(5)+GetGadgetText(7)
+    cfi$ = GetGadgetText(4)+GetGadgetText(5)+GetGadgetText(6)
+    tin$ = GetGadgetText(3)+GetGadgetText(6)+GetGadgetText(9)
+    sen$ = GetGadgetText(7)+GetGadgetText(8)+GetGadgetText(9)
+    xxx$ = "XXX"
+    ooo$ = "OOO"
+    
+    If ott$ = xxx$ Or ofn$ = xxx$ Or ocs$ = xxx$ Or tfe$ = xxx$ Or tfs$ = xxx$ Or cfi$ = xxx$ Or tin$ = xxx$ Or sen$ = xxx$
+      MessageRequester("Всё","Крестики выиграли ")
+      For i = 1 To 9
+        DisableGadget(i,1)
+      Next
+    ElseIf ott$ = ooo$ Or ofn$ = ooo$ Or ocs$ = ooo$ Or tfe$ = ooo$ Or tfs$ = ooo$ Or cfi$ = ooo$ Or tin$ = ooo$ Or sen$ = ooo$
+      MessageRequester("Всё","Нолики выиграли ")
+      For i = 1 To 9
+        DisableGadget(i,1)
+      Next
+    Else
+      If hod>8
+        MessageRequester("Всё","Ничья")
+      EndIf
+    EndIf
+    
   EndIf
 Until eee = #PB_Event_CloseWindow
