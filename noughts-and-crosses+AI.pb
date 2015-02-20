@@ -1,5 +1,5 @@
-; крестики-нолики v0.3 bugfix
-OpenWindow(0,100,100,300,320,"Крестики-нолики")
+; крестики-нолики v0.5 + bot!!
+OpenWindow(0,200,200,300,320,"Крестики-нолики")
 btnTxt$ = "Press"
 ButtonGadget(1,0  ,0  ,100,100,btnTxt$)
 ButtonGadget(2,100,0  ,100,100,btnTxt$)
@@ -40,29 +40,23 @@ Repeat
       btnTxt$ = "O"
     Else
       btnTxt$ = "X"
-      For i = 1 To 9
-        Select state(i)
-          Case 1 : Debug state
-          Case 2 : Debug state
-          Case 3 : Debug state
-          Case 4 : Debug state
-          Case 5 : Debug state
-          Case 6 : Debug state
-          Case 7 : Debug state
-          Case 8 : Debug state
-          Case 9 : Debug state
-        EndSelect
-      Next
-      
-      AI = Random(9,1) : Debug AI
     EndIf 
     For i = 1 To 9
       Select EventGadget()
         Case i
-          hod+1
+          hod+2
           state(i) = 1
           SetGadgetText(i,btnTxt$)
           DisableGadget(i,1)
+          btnTxt$ = "O"
+          AI = Random(9,1)
+          If state(AI)
+            AI = Random(9,1)
+            state(AI) = 1
+            SetGadgetText(AI,btnTxt$)
+          Else
+            SetGadgetText(AI,btnTxt$)
+          EndIf
       EndSelect
     Next
     
