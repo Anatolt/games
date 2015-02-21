@@ -1,4 +1,4 @@
-; крестики-нолики v0.5 + bot!!
+; крестики-нолики v0.6 + адекватный бот!!
 OpenWindow(0,200,200,300,320,"Крестики-нолики")
 btnTxt$ = "Press"
 ButtonGadget(1,0  ,0  ,100,100,btnTxt$)
@@ -34,6 +34,7 @@ Repeat
       btnTxt$ = "Press"
       SetGadgetText(i,btnTxt$)
       DisableGadget(i,0)
+      state(i) = 0
     Next
   ElseIf eee = #PB_Event_Gadget
     If hod%2
@@ -44,18 +45,21 @@ Repeat
     For i = 1 To 9
       Select EventGadget()
         Case i
+          Debug "Игрок сделал ход " + i
           hod+2
-          state(i) = 1
+          state(i) = 2
           SetGadgetText(i,btnTxt$)
           DisableGadget(i,1)
           btnTxt$ = "O"
           AI = Random(9,1)
-          If state(AI)
+          Debug "ИИ включился. Выбираем позицию " + AI + " её значение" + Str(state(AI))
+          If state(AI) = 2
+            Debug "Мы внутри цикла" 
             AI = Random(9,1)
-            state(AI) = 1
-            SetGadgetText(AI,btnTxt$)
           Else
+            state(AI) = 2
             SetGadgetText(AI,btnTxt$)
+            DisableGadget(AI,1)
           EndIf
       EndSelect
     Next
