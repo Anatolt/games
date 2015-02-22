@@ -1,5 +1,5 @@
-; крестики-нолики v0.6 + адекватный бот!!
 OpenWindow(0,200,200,300,320,"Крестики-нолики")
+TextGadget(10,0,300,300,20,"v0.6 +bot!     F5 - restart, Esc - quit",#PB_Text_Center)
 btnTxt$ = "Press"
 ButtonGadget(1,0  ,0  ,100,100,btnTxt$)
 ButtonGadget(2,100,0  ,100,100,btnTxt$)
@@ -10,7 +10,6 @@ ButtonGadget(6,200,100,100,100,btnTxt$)
 ButtonGadget(7,0  ,200,100,100,btnTxt$)
 ButtonGadget(8,100,200,100,100,btnTxt$)
 ButtonGadget(9,200,200,100,100,btnTxt$)
-TextGadget(10,0,300,300,20,"v0.3  |  F5 - restart, Esc - quit",#PB_Text_Center)
 CreatePopupMenu(0)
 MenuItem(1, "Restart")
 MenuItem(2, "Quit")
@@ -52,11 +51,13 @@ Repeat
           DisableGadget(i,1)
           btnTxt$ = "O"
           AI = Random(9,1)
-          Debug "ИИ включился. Выбираем позицию " + AI + " её значение" + Str(state(AI))
-          If state(AI) = 2
-            Debug "Мы внутри цикла" 
+          Debug "Выбираем позицию " + AI + " её значение " + Str(state(AI))
+          While state(AI) = 2
             AI = Random(9,1)
-          Else
+            Debug "Позиция занята. Пробуем еще AI = " + AI
+          Wend
+          If state(AI) = 0
+            Debug Str(AI) + " эта позиция подходит. Делаем ход"
             state(AI) = 2
             SetGadgetText(AI,btnTxt$)
             DisableGadget(AI,1)
