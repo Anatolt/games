@@ -1,15 +1,33 @@
-; Pure Basic Sourse File. Dead Games Simulator v0.2
+; Pure Basic Sourse File. Dead Games Simulator v0.3 Procedures
+
+Global howManyDays, howManyLives, Days, Lives
+
+Procedure indicators(li)
+  howManyDays + 1
+  howManyLives + li
+  daysIndic$ = "Day: " + howManyDays 
+  liveIndic$ = "Lives: " + howManyLives + "/5"
+  SetGadgetText(Lives,liveIndic$)
+  SetGadgetText(Days,daysIndic$)
+EndProcedure
 
 OpenWindow(0,0,0,220,120,"GamerSim",#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
-howManyDays = 1
-howManyLives = 5
-liveIndic$ = "Lives: " + howManyLives + "/5"
-daysIndic$ = "Day: " + howManyDays 
 Goal = TextGadget(#PB_Any,10,10,200,20,"Stay alive 10 days")
-Lives = TextGadget(#PB_Any,10,30,200,20,liveIndic$)
-Days = TextGadget(#PB_Any,10,50,200,20,daysIndic$)
+Days = TextGadget(#PB_Any,10,30,200,20,daysIndic$)
+Lives = TextGadget(#PB_Any,10,50,200,20,liveIndic$)
 sleepBtn = ButtonGadget(#PB_Any,10,70,200,20,"Sleep")
 playBtn = ButtonGadget(#PB_Any,10,90,200,20,"Play")
+
+Procedure start_indic()
+  howManyDays=1
+  howManyLives=5
+  daysIndic$ = "Day: " + howManyDays 
+  liveIndic$ = "Lives: " + howManyLives + "/5"
+  SetGadgetText(Lives,liveIndic$)
+  SetGadgetText(Days,daysIndic$)
+EndProcedure
+
+start_indic()
 
 Repeat 
   event = WaitWindowEvent()
@@ -30,45 +48,23 @@ Repeat
     If event = #PB_Event_Gadget
       Select EventGadget()
         Case sleepBtn
-          howManyLives+3
-          howManyDays+1 
-          liveIndic$ = "Lives: " + howManyLives + "/5"
-          daysIndic$ = "Day: " + howManyDays 
-          SetGadgetText(Lives,liveIndic$)
-          SetGadgetText(Days,daysIndic$)
+          indicators(3)
         Case playBtn
-          howManyLives-1
-          howManyDays+1  
-          liveIndic$ = "Lives: " + howManyLives + "/5"
-          daysIndic$ = "Day: " + howManyDays 
-          SetGadgetText(Lives,liveIndic$)
-          SetGadgetText(Days,daysIndic$)
+          indicators(-1)
       EndSelect
     EndIf
     Select howManyLives
       Case 0
-        youDeadTxt$ = "You DEAD. You die from PLAY too much "
-        Result = MessageRequester("You DEAD",youDeadTxt$)
+        Result = MessageRequester("You DEAD","You DEAD. You die from PLAY too much")
         deadUnsleep + 1
         If Result
-          howManyLives = 5
-          howManyDays = 1
-          liveIndic$ = "Lives: " + howManyLives + "/5"
-          daysIndic$ = "Day: " + howManyDays 
-          SetGadgetText(Lives,liveIndic$)
-          SetGadgetText(Days,daysIndic$)
+          start_indic()
         EndIf
       Case 6 To 10
-        youDeadTxt$ = "You DEAD. You die from SLEEP too much "
-        Result = MessageRequester("You DEAD",youDeadTxt$)
+        Result = MessageRequester("You DEAD","You DEAD. You die from SLEEP too much.")
         deadGame + 1
         If Result
-          howManyLives = 5
-          howManyDays = 1
-          liveIndic$ = "Lives: " + howManyLives + "/5"
-          daysIndic$ = "Day: " + howManyDays 
-          SetGadgetText(Lives,liveIndic$)
-          SetGadgetText(Days,daysIndic$)
+          start_indic()
         EndIf
     EndSelect
   EndIf
