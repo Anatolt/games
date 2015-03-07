@@ -1,13 +1,12 @@
-version$ = "v0.2"
-; конструктор форм откратительная глючная херня
-; добавил пояснение расчёта выигрыша
-; добавил кнопку "крутить до выигрыша"
-; засунул вращение барабанов в процедуру
-; вывел лог для пользователя вместо дебаггера
+version$ = "v0.3"
+; переделал цифры в символы
+; написал логику постановки символов вместо цифр
+; переделал систему считывания значений
+; переписал пояснения к выигрышу
 
 ; план 
 ; добавить изображения барабанов 
-; добавить фрукты вместо цифр
+; добавить картинками фрукты вместо цифр
 ; добавить эффект вращения 
 ; кнопку старт/стоп
 ; сложный учёт
@@ -41,20 +40,14 @@ OpenWindow(#PB_Any, 200, 200, 250, 480, "Слот Машина " + version$, #PB
 ;ImageGadget(#indik2, 90, 10, 70, 100, ImageID(#seven))
 ;ImageGadget(#indik3, 170, 10, 70, 100, ImageID(#banan))
 
-; стартовое значение индикаторов
-TextGadget(#indik1, 10, 10, 70, 100, "8", #PB_Text_Center | #PB_Text_Border)
-TextGadget(#indik2, 90, 10, 70, 100, "8", #PB_Text_Center | #PB_Text_Border)
-TextGadget(#indik3,170, 10, 70, 100, "8", #PB_Text_Center | #PB_Text_Border)
-
-; задел на будущее вместо картинок
-;TextGadget(#PB_Any, 10, 130, 100, 20, "♠♠♠ = Ставка *1")
-;TextGadget(#PB_Any, 10, 150, 100, 20, "♣♣♣ = *2")
-;TextGadget(#PB_Any, 10, 170, 100, 20, "♥♥♥ = *3")
-;TextGadget(#PB_Any, 10, 190, 100, 20, "♦♦♦ = *4")
-
-TextGadget(#PB_Any, 10, 130, 200, 20, "333 = выигрыш 9 * ставка")
-TextGadget(#PB_Any, 10, 150, 100, 20, "222 = 6*ставка")
-TextGadget(#PB_Any, 10, 170, 100, 20, "111 = 3*ставка")
+; стартовое значение индикаторов ♣♥♠
+TextGadget(#indik1, 10, 10, 70, 100, "♣", #PB_Text_Center | #PB_Text_Border)
+TextGadget(#indik2, 90, 10, 70, 100, "♥", #PB_Text_Center | #PB_Text_Border)
+TextGadget(#indik3,170, 10, 70, 100, "♠", #PB_Text_Center | #PB_Text_Border)
+TextGadget(#PB_Any, 10, 115, 200, 15, "Если выпадет ")
+TextGadget(#PB_Any, 10, 130, 200, 15, "♣♣♣ выигрыш = 9 * ставка")
+TextGadget(#PB_Any, 10, 145, 200, 15, "♥♥♥ выигрыш = 6 * ставка")
+TextGadget(#PB_Any, 10, 160, 200, 15, "♠♠♠ выигрыш = 3 * ставка")
 
 For i = #indik1 To #indik3
   SetGadgetFont(i, FontID(#Font))
@@ -75,14 +68,23 @@ Procedure Money(stavka)
 EndProcedure
 
 Procedure Roling()
+  state$ = ""
   Dim Result(3)
   For i = #indik1 To #indik3
-    SetGadgetText(i,Str(Random(3,1)))
-    Result(i) = Val(GetGadgetText(i))
+    Result(i) = Random(3,1)
+    Select Result(i)
+      Case 1
+        SetGadgetText(i,"♠")
+      Case 2
+        SetGadgetText(i,"♥")
+      Case 3
+        SetGadgetText(i,"♣")
+    EndSelect
+    state$+GetGadgetText(i)
   Next
   hod+1
   Stavka = GetGadgetState(#TrackBar)
-  log$ = "Ход " + Str(hod) + ". Ставка " + Str(Stavka) + ". "
+  log$ = "Ход " + Str(hod) + ". Ставка " + Str(Stavka) + ". Выпало" + state$
   If Result(1) = Result(2) And Result(2) = Result(3)
     SuperResult = Stavka * (Result(1) + Result(1) + Result(1))
     AddGadgetItem(#Log,0,log$+"Выиграли " + Str(SuperResult))
@@ -106,4 +108,4 @@ Repeat
         SuperResult = 0
     EndSelect
   EndIf
-  Until event = #PB_Event_CloseWindow
+Until event = #PB_Event_CloseWindow
