@@ -5,6 +5,7 @@ version$ = "v0.3"
 ; переписал пояснения к выигрышу
 
 ; план 
+; если зажать кнопку барабаны должны крутиться и делаться ставка раз в секунду
 ; добавить изображения барабанов 
 ; добавить картинками фрукты вместо цифр
 ; добавить эффект вращения 
@@ -34,16 +35,19 @@ OpenWindow(#PB_Any, 200, 200, 250, 480, "Слот Машина " + version$, #PB
 
 ; картинки блять опять не работают...
 ;LoadImage(#cherry, "cherry.jpg")    
-;LoadImage(#seven, "seven.jpg")
-;LoadImage(#banan, "banan.jpg")
-;ImageGadget(#indik1, 10, 10, 70, 100, ImageID(#cherry))
-;ImageGadget(#indik2, 90, 10, 70, 100, ImageID(#seven))
-;ImageGadget(#indik3, 170, 10, 70, 100, ImageID(#banan))
+;UsePNGImageDecoder()
+
+LoadImage(#cherry, "cherry.bmp")
+LoadImage(#seven, "seven.bmp")
+LoadImage(#banan, "banan.bmp")
+ImageGadget(#indik1, 10, 10, 70, 100, ImageID(#cherry))
+ImageGadget(#indik2, 90, 10, 70, 100, ImageID(#seven))
+ImageGadget(#indik3, 170, 10, 70, 100, ImageID(#banan))
 
 ; стартовое значение индикаторов ♣♥♠
-TextGadget(#indik1, 10, 10, 70, 100, "♣", #PB_Text_Center | #PB_Text_Border)
-TextGadget(#indik2, 90, 10, 70, 100, "♥", #PB_Text_Center | #PB_Text_Border)
-TextGadget(#indik3,170, 10, 70, 100, "♠", #PB_Text_Center | #PB_Text_Border)
+;TextGadget(#indik1, 10, 10, 70, 100, "♣", #PB_Text_Center | #PB_Text_Border)
+;TextGadget(#indik2, 90, 10, 70, 100, "♥", #PB_Text_Center | #PB_Text_Border)
+;TextGadget(#indik3,170, 10, 70, 100, "♠", #PB_Text_Center | #PB_Text_Border)
 TextGadget(#PB_Any, 10, 115, 200, 15, "Если выпадет ")
 TextGadget(#PB_Any, 10, 130, 200, 15, "♣♣♣ выигрыш = 9 * ставка")
 TextGadget(#PB_Any, 10, 145, 200, 15, "♥♥♥ выигрыш = 6 * ставка")
@@ -74,11 +78,11 @@ Procedure Roling()
     Result(i) = Random(3,1)
     Select Result(i)
       Case 1
-        SetGadgetText(i,"♠")
+        SetGadgetState(i,ImageID(#cherry))
       Case 2
-        SetGadgetText(i,"♥")
+        SetGadgetState(i,ImageID(#banan))
       Case 3
-        SetGadgetText(i,"♣")
+        SetGadgetState(i,ImageID(#seven))
     EndSelect
     state$+GetGadgetText(i)
   Next
