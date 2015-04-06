@@ -12,6 +12,8 @@
 ;+все кнопки пропадают, текст не обнулился
 ;вывод финального сообщения с показателями всех индикаторов
 ;при смерти восстановить все кнопки в начальное состояние
+
+;Планы
 ;смена целей
 
 Global Day, Money, Lives, money_indik, days_indik, lives_indik, texts_indic, cod_indik, Text, Code, btn_aks_fr, zhurnal, tip_poluch_znania, tip_ask, goal
@@ -31,7 +33,7 @@ goal = TextGadget(#PB_Any, 10, 10, 260, 20, "")
 ;Задача: Поправить здоровье
 ;Задача: Создать полноценный сайт
 
-Procedure goal(goal_txt$)
+Procedure setgoal(goal_txt$)
   SetGadgetText(goal,"Задача: "+goal_txt$)
 EndProcedure
 Procedure DL(numlives)
@@ -64,14 +66,7 @@ Procedure Start_indic()
   SetGadgetText(money_indik,"Денег: 300р")
   SetGadgetText(days_indik, "День: 1")
   SetGadgetText(lives_indik, "❤ 3/10")
-  goal("Нажимать на кнопки")
-  how_many_question = 0
-  how_many_tread = 0
-  how_many_google = 0
-  Text = 0
-  Code = 0
-  Result = 0
-  DisableGadget(btn_aks_fr,0)
+  setgoal("Нажимать на кнопки")
 EndProcedure
 Procedure tip(txt$)
   AddGadgetItem(zhurnal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())  + " " + txt$)
@@ -96,14 +91,21 @@ EndProcedure
 Start_indic()
 
 Repeat
-  event = WaitWindowEvent()
+  ;некрасиво - текст подрагивает, потому что процесс выполняется. как поставить текст и забыть?
   ;проверяем не мертвы ли мы
   If Result
     start_indic()
     ; восстановить все кнопки в начальное состояние
     ForEach ab()
-     HidGad(ab(),1)
+      HidGad(ab(),1)
     Next
+    how_many_question = 0
+    how_many_tread = 0
+    how_many_google = 0
+    Text = 0
+    Code = 0
+    Result = 0
+    DisableGadget(btn_aks_fr,0)
   EndIf
   ; отключаем кнопки, которые расходуют деньги, если денег нет
   If money <= 0
@@ -140,10 +142,7 @@ Repeat
       tip("Вы погибли ибо у вас кончились жизни. Вы нажали Ok дабы заново начать")
       endlives + 1
     Case 1 To 10
-      ;некрасиво - текст подрагивает, потому что процесс выполняется. как поставить текст и забыть?
-      ;If Lives = 1
-      ;  goal("Поправить здоровье")
-      ;EndIf
+      event = WaitWindowEvent()
       If event = #PB_Event_Gadget 
         Select EventGadget() 
           Case btn_aks_fr
@@ -185,7 +184,7 @@ Repeat
             ;читы
             If GetGadgetItemText(zhurnal,0) = "666"
               btn_win = ButtonGadget(#PB_Any, 270,400, 170, 25, "Скрафтить и выиграть")
-              goal("Скрафтить полноценный сайт") 
+              setgoal("Скрафтить полноценный сайт") 
             EndIf
             tip("Вы восполнили здоровье на 3 и потратили 100р. Не пейте много")
             Money(-100)
@@ -245,7 +244,7 @@ Repeat
                 tip("Вы изучили: Как вообще делается сайт")
                 tip_craft = TextGadget(#PB_Any, 10, 400, 260, 20, "Код*10 + текст*10 + домен*1 = сайт")
                 btn_win = ButtonGadget(#PB_Any, 270,400, 170, 25, "Скрафтить и выиграть")
-                goal("Скрафтить полноценный сайт") 
+                setgoal("Скрафтить полноценный сайт") 
                 add_btn(ab(),btn_win)
                 DisableGadget(btn_win,1)
               Case 5
