@@ -1,22 +1,30 @@
-;6 подход. 
-;проверка денег - работает!
-;изменить подпись цены кода под html
-;пояснение в лог о цене текста и html
-;html продаётся по 500р! - поменять подпись
-;купить домен не выключается после попкупки
-;проверка условий при нажатии кнопки выигрыша. до этого она не активна, но видна
-;под продать текст написано сколько денег
-;под купить домен написано
-;+правильноая цена в пояснении продать и купить хтмл
-;+пробел после start & stop -1
-;+все кнопки пропадают, текст не обнулился
-;вывод финального сообщения с показателями всех индикаторов
-;при смерти восстановить все кнопки в начальное состояние
+;>7 подход
+;выписал план действий с учётом багрепортов пользователей
+;сделал вывод в лог дни и деньги. сразу вылез баг, что выводится с запозданием на одну операцию
+;кажется починил баг с тем что нельзя выиграть переместив проверку "не выиграли ли мы" на самый верх цикла Repeat
+;пояснил что умирать не страшно
 
-;Планы
+;>Планы
 ;смена целей
+;выводить в лог больше инфы
+;вывод окна посередине
+;отправлять весь лог
+;написать парсер лога. если скормить ему лог - он сделает то, что написано в логе
+;прикрутить отправку почты
 
-Global Day, Money, Lives, money_indik, days_indik, lives_indik, texts_indic, cod_indik, Text, Code, btn_aks_fr, zhurnal, tip_poluch_znania, tip_ask, goal
+;>Баги
+;бывает нельзя выиграть, есть лог
+;не пропадают пояснения к кнопкам после смерти
+;нет записи в логе о домене
+
+;>Просчёты в дизайне
+;нужно пояснить игроку что умирать не страшно
+;не понятно что нужно догуглить
+;пояснение к кнопке выигрыш
+;журнал наверх
+
+Global Day, Money, Lives, Text, Code
+Global money_indik, days_indik, lives_indik, texts_indic, cod_indik, btn_aks_fr, zhurnal, tip_poluch_znania, tip_ask, goal
 
 Window_0 = OpenWindow(#PB_Any, 100, 100, 570, 660, "Симулятор", #PB_Window_SystemMenu)
 
@@ -36,6 +44,7 @@ goal = TextGadget(#PB_Any, 10, 10, 260, 20, "")
 Procedure setgoal(goal_txt$)
   SetGadgetText(goal,"Задача: "+goal_txt$)
 EndProcedure
+
 Procedure DL(numlives)
   Lives+numlives
   Day+1
@@ -44,21 +53,25 @@ Procedure DL(numlives)
   SetGadgetText(days_indik,days_indik$)
   SetGadgetText(lives_indik,lives_indik$)
 EndProcedure
+
 Procedure Text(numtext)
   Text + numtext
   texts_indic$ = "Текстов: " + Str(Text)
   SetGadgetText(texts_indic,texts_indic$)
 EndProcedure
+
 Procedure Code(numcode)
   Code + numcode
   cod_indik$ = "html: " + Code
   SetGadgetText(cod_indik,cod_indik$)
 EndProcedure
+
 Procedure Money(nummoney)
   Money+nummoney
   money_indik$ = "Денег: " + Str(Money) + "р"
   SetGadgetText(money_indik,money_indik$)
 EndProcedure
+
 Procedure Start_indic()
   Money = 300
   Day = 1
@@ -68,14 +81,17 @@ Procedure Start_indic()
   SetGadgetText(lives_indik, "❤ 3/10")
   setgoal("Нажимать на кнопки")
 EndProcedure
+
 Procedure tip(txt$)
-  AddGadgetItem(zhurnal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())  + " " + txt$)
+  AddGadgetItem(zhurnal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day) +" "+ txt$ +" "+"Денег: " + Str(Money) + "р")
 EndProcedure
+
 Procedure DisBat(name_of_btn,param)
   If name_of_btn
     DisableGadget(name_of_btn,param)
   EndIf
 EndProcedure
+
 Procedure HidGad(name_of_btn,param)
   If name_of_btn
     HideGadget(name_of_btn,param)
@@ -92,6 +108,11 @@ Start_indic()
 
 Repeat
   ;некрасиво - текст подрагивает, потому что процесс выполняется. как поставить текст и забыть?
+
+  ; проверка, не готовы ли мы выиграть
+  If Code = 10 And Text = 10 And Domain
+    DisBat(btn_win,0)
+  EndIf
   ;проверяем не мертвы ли мы
   If Result
     start_indic()
@@ -131,15 +152,11 @@ Repeat
   Else 
     DisBat(btn_sell_cod,0)
   EndIf
-  ; проверка, не готовы ли мы выиграть
-  If Code = 10 And Text = 10 And Domain
-    DisBat(btn_win,0)
-  EndIf
   ; проверка жизней и основной цикл
   Select Lives
     Case 0
-      Result = MessageRequester("Вы погибли","У вас кончились жизни. Нажмите Ok чтобы начать заново")
-      tip("Вы погибли ибо у вас кончились жизни. Вы нажали Ok дабы заново начать")
+      Result = MessageRequester("Вы погибли","У вас кончились жизни. Ничего страшного! Нажмите OK чтобы начать заново")
+      tip("Вы погибли ибо у вас кончились жизни. Вы нажали OK дабы заново начать")
       endlives + 1
     Case 1 To 10
       event = WaitWindowEvent()
@@ -266,6 +283,7 @@ Repeat
             Money(-400)
           Case btn_buy_domain
             Domain = 1
+            tip("Вы купили домен -600р")
             DisBat(btn_buy_domain,1)
             SetGadgetText(domain_indik,"Домен: есть")
             Money(-600)
@@ -291,13 +309,12 @@ Repeat
                                      "Text: "+Str(Text)+" "+
                                      "Code: "+Str(Code))
             AddGadgetItem(win_log,-1,"Stop: "+GetGadgetItemText(zhurnal,0))
-            Debug CountGadgetItems(zhurnal)
             AddGadgetItem(win_log,-1,"Start: "+GetGadgetItemText(zhurnal,CountGadgetItems(zhurnal)-2))
         EndSelect
       EndIf
     Case 10 To 20
-      Result = MessageRequester("Вы погибли","Перебор. Нажмите Ok чтобы начать заново")
+      Result = MessageRequester("Вы погибли","Ничего страшного! Нажмите OK чтобы начать заново")
       overdrink + 1
-      tip("Вы погибли. Перебор. Вы нажали Ok чтобы начать заново")
+      tip("Вы погибли. Перебор. Вы нажали OK чтобы начать заново")
   EndSelect
 Until event = #PB_Event_CloseWindow
