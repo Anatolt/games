@@ -1,6 +1,5 @@
-;>8 подход
-;запись в логе о домене
-;сделал вывод главного и window_win окна посередине. Сделал им одинаковый размер.
+;>9 подход
+;убрал нафиг второе окно window_win. вывел победу прямо в журнал всей игры. теперь можно продолжить игру даже выиграв
 
 ;>Планы
 ;нарисовать новый интерфейс
@@ -10,6 +9,7 @@
 ;прикрутить отправку почты
 
 ;>Баги
+;можно купить что-то, на что не хватает денег (только 1 раз =)
 ;сделал вывод в лог дни и деньги. сразу вылез баг, что выводится с запозданием на одну операцию
 ;не пропадают пояснения к кнопкам после смерти
 
@@ -26,6 +26,7 @@
 ;>Оверкил
 ;сделать рандомные фразы на разные действия в лог
 ;написать парсер лога. если скормить ему лог - он сделает то, что написано в логе
+;ачивки?
 
 Global Day, Money, Lives, Text, Code
 Global money_indik, days_indik, lives_indik, texts_indic, cod_indik, btn_aks_fr, zhurnal, tip_poluch_znania, tip_ask, goal
@@ -167,6 +168,10 @@ Repeat
       If event = #PB_Event_Gadget 
         Select EventGadget() 
           Case btn_aks_fr
+            ;читы
+            If GetGadgetItemText(zhurnal,0) = "666"
+              btn_win = ButtonGadget(#PB_Any, 270,400, 170, 25, "Скрафтить и выиграть")
+            EndIf
             how_many_question+1
             Select how_many_question
               Case 1
@@ -202,11 +207,6 @@ Repeat
                 tip("Вы больше не можете задавать другу вопросы")
             EndSelect
           Case btn_drink
-            ;читы
-            If GetGadgetItemText(zhurnal,0) = "666"
-              btn_win = ButtonGadget(#PB_Any, 270,400, 170, 25, "Скрафтить и выиграть")
-              setgoal("Скрафтить полноценный сайт") 
-            EndIf
             tip("Вы восполнили здоровье на 3 и потратили 100р. Не пейте много")
             Money(-100)
             DL(3)
@@ -301,19 +301,14 @@ Repeat
             Money(500)
           Case btn_win
             tip("Вы создали полноценный сайт! Победа!")
-            Window_Win = OpenWindow(#PB_Any, 200, 200, 570, 660, "Победа", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
-            TextGadget(#PB_Any,10,10,180,90,"Вы выиграли! Поздравляю. Скопируйте пожалуйста результат и отправьте на почту."+
-                                            "Это необходимо для разработки следующей игры")
-            win_log = EditorGadget(#PB_Any,10,100,180,90)
-            AddGadgetItem(win_log,-1,"mailto:tolik@at02.ru")
-            AddGadgetItem(win_log,-1,"subj:webmaster-sim-1")
-            AddGadgetItem(win_log,-1,"EndLives "+Str(endlives)+" "+
+            AddGadgetItem(zhurnal,0,"EndLives "+Str(endlives)+" "+
                                      "Over Drink "+Str(overdrink)+" "+
                                      "Day: "+Str(Day)+" "+
                                      "Text: "+Str(Text)+" "+
                                      "Code: "+Str(Code))
-            AddGadgetItem(win_log,-1,"Stop: "+GetGadgetItemText(zhurnal,0))
-            AddGadgetItem(win_log,-1,"Start: "+GetGadgetItemText(zhurnal,CountGadgetItems(zhurnal)-2))
+            AddGadgetItem(zhurnal,0,"subj: webmaster-sim-1")
+            AddGadgetItem(zhurnal,0,"mailto: tolik@at02.ru")
+            Result = MessageRequester("ВЫ ВЫИГРАЛИ!","Поздравляю. Скопируйте пожалуйста журнал и отправьте мне на почту. Реквизиты - в самом журнале")
         EndSelect
       EndIf
     Case 10 To 20
