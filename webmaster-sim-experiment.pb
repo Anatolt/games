@@ -1,3 +1,4 @@
+; that shit does not work =( 
 Procedure OpenWindow_0(x = 0, y = 0, width = 670, height = 400)
   Window_0 = OpenWindow(#PB_Any, x, y, width, height, "", #PB_Window_SystemMenu)
   read_forum = ButtonGadget(1, 10, 30, 100, 25, "Read Forum")
@@ -13,15 +14,15 @@ Repeat
   event = WaitWindowEvent()
   If event = #PB_Event_Gadget
     Select EventGadget()
-      Case 1
+      Case read_forum
         Debug "forum"
-      Case 2
+      Case google
         Debug "google"
-      Case 3
+      Case stack
         Debug "stack"
-      Case 4
+      Case ask_friend
         Debug "friends"
-      Case 5
+      Case github
         Debug "github"
     EndSelect
   EndIf
