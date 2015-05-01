@@ -1,14 +1,14 @@
-;чувак ты забыл кнопку "выиграть"
-;кнопка гуглить не исчезает. просто когда заканчивается список фраз пишет "что гуглить-то?" 
-;идея: можно дать пользователю реальную возможность гуглить через игру, чтобы он мог ввести что-то и игра выдала это в лог
 Global Window_0
 
-Global forum, google, stack, friend, github, Text, Html, Design, Backup, Buy_Text, Buy_Html, Buy_Design, Buy_Domain, Buy_Hosting, Sell_Text, Sell_Html, Sell_Design, Noodles, McDonut, Home_Food, Walk, Conference, Club, journal, knowledge, knowhow, buy, sell, eat, buzz, tip
-;Global List all_btn() - так не прокатывает
-Global Text_cnt, Html_cnt, Design_cnt, Money_cnt, Day, Lives_cnt, Mood_cnt
+Global forum, google, stack, friend, github, Text, Html, Design, Backup
+Global Buy_Text, Buy_Html, Buy_Design, Buy_Domain, Buy_Hosting
+Global Sell_Text, Sell_Html, Sell_Design, Noodles, McDonut, Home_Food, Walk, Conference, Club
+Global journal, knowledge, knowhow, buy, sell, eat, buzz, tip
+Global NewList all_btn()
+Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
 
-Procedure OpenWindow_0(x = 0, y = 0, width = 670, height = 400)
-  Window_0 = OpenWindow(#PB_Any, x, y, width, height, "Симулятор неунывающего вебмастера v0.2", #PB_Window_SystemMenu)
+Procedure OpenWindow_0(width = 670, height = 400)
+  Window_0 = OpenWindow(#PB_Any, #PB_Ignore, #PB_Ignore, width, height, "Симулятор неунывающего вебмастера v0.2", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
   forum = ButtonGadget(#PB_Any, 10, 60, 100, 25, "Read Forum")
   google = ButtonGadget(#PB_Any, 10, 30, 100, 25, "Google")
   stack = ButtonGadget(#PB_Any, 10, 90, 100, 25, "Stackoverflow")
@@ -39,14 +39,15 @@ Procedure OpenWindow_0(x = 0, y = 0, width = 670, height = 400)
   sell = TextGadget(#PB_Any, 340, 10, 100, 20, "Заработать")
   eat = TextGadget(#PB_Any, 450, 10, 100, 20, "Кушать")
   buzz = TextGadget(#PB_Any, 560, 10, 100, 20, "Развлекаться")
-  tip = TextGadget(#PB_Any, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнал ↓") ; убрать в финальном релизе
+  comment = TextGadget(#PB_Any, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнал ↓") ; убрать в финальном релизе
+  Win = ButtonGadget(#PB_Any, 560, 150, 100, 25, "Win")
 EndProcedure
 
 OpenWindow_0()
 
 Procedure tip(txt$)
   Day+1
-  AddGadgetItem(journal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day)+" Денег: "+Str(Money_cnt)+"р "+" Настрой: "+
+  AddGadgetItem(journal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day)+" Денег: "+Str(Money)+"р "+" Настрой: "+
                           Str(Mood_cnt)+" Сытость: "+Str(Lives_cnt)+" "+txt$)
 EndProcedure
 
@@ -66,7 +67,15 @@ Procedure add_design(numdes)
 EndProcedure
 
 Procedure Money(num)
-  Money_cnt + num
+  If num < 0
+    If Money < -num
+      Debug "Недостаточно денег" ;не работает
+    Else
+      Money + num
+    EndIf
+  Else
+    Money + num
+  EndIf
 EndProcedure
 
 Procedure Mood(num)
@@ -80,54 +89,65 @@ EndProcedure
 Procedure Hide(name_of_btn)
   If name_of_btn
     HideGadget(name_of_btn,1)
+  Else
+    Debug "No btn"
   EndIf
 EndProcedure
 
 Procedure Show(name_of_btn) ; почему-то не работает
   If name_of_btn
     HideGadget(name_of_btn,0)
+  Else
+    Debug "No btn"
   EndIf
 EndProcedure
 
 NewList all_btn()
 
-Procedure add_btn(List lname(), name_of_btn)
-  AddElement(lname())
-  lname() = name_of_btn
+Procedure add_btn(name_of_btn)
+  AddElement(all_btn())
+  all_btn() = name_of_btn
 EndProcedure
 
-add_btn(all_btn(), forum)
-add_btn(all_btn(), stack)
-add_btn(all_btn(), friend)
-add_btn(all_btn(), github)
-add_btn(all_btn(), Text)
-add_btn(all_btn(), Html)
-add_btn(all_btn(), Design)
-add_btn(all_btn(), Backup)
-add_btn(all_btn(), Buy_Text)
-add_btn(all_btn(), Buy_Html)
-add_btn(all_btn(), Buy_Design)
-add_btn(all_btn(), Buy_Domain)
-add_btn(all_btn(), Buy_Hosting)
-add_btn(all_btn(), Sell_Text)
-add_btn(all_btn(), Sell_Html)
-add_btn(all_btn(), Sell_Design)
-add_btn(all_btn(), Noodles)
-add_btn(all_btn(), McDonut)
-add_btn(all_btn(), Home_Food)
-add_btn(all_btn(), Walk)
-add_btn(all_btn(), Conference)
-add_btn(all_btn(), Club)
-add_btn(all_btn(), journal)
-add_btn(all_btn(), knowhow)
-add_btn(all_btn(), buy)
-add_btn(all_btn(), sell)
-add_btn(all_btn(), eat)
-add_btn(all_btn(), buzz)
-add_btn(all_btn(), tip)
+add_btn(forum)
+add_btn(stack)
+add_btn(friend)
+add_btn(github)
+add_btn(Text)
+add_btn(Html)
+add_btn(Design)
+add_btn(Backup)
+add_btn(Buy_Text)
+add_btn(Buy_Html)
+add_btn(Buy_Design)
+add_btn(Buy_Domain)
+add_btn(Buy_Hosting)
+add_btn(Sell_Text)
+add_btn(Sell_Html)
+add_btn(Sell_Design)
+add_btn(Noodles)
+add_btn(McDonut)
+add_btn(Home_Food)
+add_btn(Walk)
+add_btn(Conference)
+add_btn(Club)
+add_btn(journal)
+add_btn(knowhow)
+add_btn(buy)
+add_btn(sell)
+add_btn(eat)
+add_btn(buzz)
+
+Sell_Text_Price = 200
+
+Buy_Text_Price = 100
+Buy_Html_Price = 500
+Buy_Design_Price = 800
+Buy_Hosting_Price = 600
+Buy_Domain_Price = 500
 
 ; dead = 1 ; (стартовое состояние)
-
+tip("Let get this party started")
 Repeat 
   event = WaitWindowEvent()
   If dead
@@ -136,7 +156,6 @@ Repeat
     Next
     dead = 0
   EndIf
-  
   If event = #PB_Event_Gadget
     Select EventGadget()
       Case google
@@ -164,55 +183,86 @@ Repeat
         add_design(1)
         tip("Вы нарисовали "+Str(Design_cnt)+" psd")
       Case Backup
-        tip("Вы сделали бекап")
         SetGadgetText(Backup,"Backup: Y")
         DisableGadget(Backup,1)
+        tip("Вы сделали бекап")
       Case Buy_Text
-        Money(-100)
-        tip("Вы купили текст")
-        add_text(1)
+        If Money >= Buy_Text_Price
+          Money(-Buy_Text_Price)
+          add_text(1)
+          tip("Вы купили текст за "+Str(Buy_Text_Price))
+        ElseIf Money < Buy_Text_Price
+          tip("Недостаточно денег. Нужно "+Str(Buy_Text_Price))
+        EndIf
       Case Buy_Html
-        Money(-500)
-        add_html(1)
-        tip("Вы купили html")
+        If Money >= Buy_Html_Price
+          Money(-Buy_Html_Price)
+          add_html(1)
+          tip("Вы купили html за "+Str(Buy_Html_Price))
+        ElseIf Money < Buy_Html_Price
+          tip("Недостаточно денег. Нужно "+Str(Buy_Html_Price))
+        EndIf
       Case Buy_Design
-        add_design(1)
-        Money(-800)
-        tip("Вы купили дизайн")
+        If Money >= Buy_Design_Price
+          Money(-Buy_Design_Price)
+          add_design(1)
+          tip("Вы купили дизайн за "+Str(Buy_Design_Price))
+        ElseIf Money < Buy_Design_Price
+          tip("Недостаточно денег. Нужно "+Str(Buy_Design_Price))
+        EndIf
       Case Buy_Domain
-        Money(-600)
-        SetGadgetText(Buy_Domain,"Domain: Y")
-        DisableGadget(Buy_Domain,1)
-        tip("Вы купили домен")
+        If Money >= 600
+          Money(-600)
+          SetGadgetText(Buy_Domain,"Domain: Y")
+          DisableGadget(Buy_Domain,1)
+          tip("Вы купили домен за 600")
+        ElseIf Money < 600
+          tip("Недостаточно денег. Нужно 600")
+        EndIf
       Case Buy_Hosting
-        Money(-700)
-        SetGadgetText(Buy_Hosting,"Hosting: Y")
-        DisableGadget(Buy_Hosting,1)
-        tip("Вы купили хостинг")
+        If Money >= 700
+          Money(-700)
+          SetGadgetText(Buy_Hosting,"Hosting: Y")
+          DisableGadget(Buy_Hosting,1)
+          tip("Вы купили хостинг за 700")
+        ElseIf Money < 700
+          tip("Недостаточно денег. Нужно 700")
+        EndIf
       Case Sell_Text
-        add_text(-1)
-        Money(200)
-        tip("Вы продали текст")
+        If Text_cnt <= 0
+          tip("Вы не можете продать текст. У вас его нет")
+        ElseIf Text_cnt > 0
+          add_text(-1)
+          Money(Sell_Text_Price)
+          tip("Вы продали текст. +"+Str(Sell_Text_Price))
+        EndIf
       Case Sell_Html
-        add_html(-1)
-        Money(1000)
-        tip("Вы продали html")
+        If Html_cnt <= 0
+          tip("Вы не можете продать html. У вас его нет")
+        ElseIf Html_cnt > 0
+          add_html(-1)
+          Money(1000)
+          tip("Вы продали html. +1000")
+        EndIf
       Case Sell_Design
-        
-        add_design(-1)
-        Money(1200)
-        tip("Вы продали дизайн")
+        If Design_cnt <= 0
+          tip("Вы не можете продать дизайн. У вас его нет")
+        ElseIf Design_cnt > 0
+          add_design(-1)
+          Money(1200)
+          tip("Вы продали дизайн. +1200")
+        EndIf
       Case Noodles
-        Money(100)
+        Money(-100)
         Lives(2)
         tip("Вы поели макарон")
       Case McDonut
-        Money(100)
-        Lives(2)
+        Money(-200)
+        Lives(4)
         tip("Вы перекусили в Макдаке")
       Case Home_Food
-        Money(100)
-        Lives(2)
+        Money(-300)
+        Lives(10)
         Mood(1)
         tip("Вы насладились домашней едой")
       Case Walk
@@ -225,6 +275,10 @@ Repeat
         Mood(10)
         Money(-5000)
         tip("Вы потусили в клубе. ")
+      Case Win ; не работает
+        ForEach all_btn()
+          DisableGadget(all_btn(),1)
+        Next
     EndSelect
   EndIf
   
