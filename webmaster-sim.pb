@@ -1,11 +1,13 @@
+;убрал из процедуры про деньги проверку количества. а то деньги тогда не снимаются, а результат всё равно есть
+;почему не работает и не исчезает кнопка выиграть? думал дело в имени, переименовал - нифига. 
+;вставил дебаг просто на нажатие. не работает! Мистика
 Global Window_0
-
-Global forum, google, stack, friend, github, Text, Html, Design, Backup
+Global forum, google, stack, friend, github, Make_Text, Make_Html, Make_Design, Make_Backup
 Global Buy_Text, Buy_Html, Buy_Design, Buy_Domain, Buy_Hosting
 Global Sell_Text, Sell_Html, Sell_Design, Noodles, McDonut, Home_Food, Walk, Conference, Club
 Global journal, knowledge, knowhow, buy, sell, eat, buzz, tip
-Global NewList all_btn()
 Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
+Global NewList all_btn()
 
 Procedure OpenWindow_0(width = 670, height = 400)
   Window_0 = OpenWindow(#PB_Any, #PB_Ignore, #PB_Ignore, width, height, "Симулятор неунывающего вебмастера v0.2", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
@@ -14,10 +16,10 @@ Procedure OpenWindow_0(width = 670, height = 400)
   stack = ButtonGadget(#PB_Any, 10, 90, 100, 25, "Stackoverflow")
   friend = ButtonGadget(#PB_Any, 10, 120, 100, 25, "Friend")
   github = ButtonGadget(#PB_Any, 10, 150, 100, 25, "Github")
-  Text = ButtonGadget(#PB_Any, 120, 30, 100, 25, "Text: 0")
-  Html = ButtonGadget(#PB_Any, 120, 60, 100, 25, "Html: 0")
-  Design = ButtonGadget(#PB_Any, 120, 90, 100, 25, "Design: 0")
-  Backup = ButtonGadget(#PB_Any, 120, 120, 100, 25, "Backup: N")
+  Make_Text = ButtonGadget(#PB_Any, 120, 30, 100, 25, "Text: 0")
+  Make_Html = ButtonGadget(#PB_Any, 120, 60, 100, 25, "Html: 0")
+  Make_Design = ButtonGadget(#PB_Any, 120, 90, 100, 25, "Design: 0")
+  Make_Backup = ButtonGadget(#PB_Any, 120, 120, 100, 25, "Backup: N")
   Buy_Text = ButtonGadget(#PB_Any, 230, 30, 100, 25, "Buy Text")
   Buy_Html = ButtonGadget(#PB_Any, 230, 60, 100, 25, "Buy Html")
   Buy_Design = ButtonGadget(#PB_Any, 230, 90, 100, 25, "Buy Design")
@@ -40,69 +42,10 @@ Procedure OpenWindow_0(width = 670, height = 400)
   eat = TextGadget(#PB_Any, 450, 10, 100, 20, "Кушать")
   buzz = TextGadget(#PB_Any, 560, 10, 100, 20, "Развлекаться")
   comment = TextGadget(#PB_Any, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнал ↓") ; убрать в финальном релизе
-  Win = ButtonGadget(#PB_Any, 560, 150, 100, 25, "Win")
+  WeGotWinner = ButtonGadget(#PB_Any, 560, 150, 100, 25, "Win")
 EndProcedure
 
 OpenWindow_0()
-
-Procedure tip(txt$)
-  Day+1
-  AddGadgetItem(journal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day)+" Денег: "+Str(Money)+"р "+" Настрой: "+
-                          Str(Mood_cnt)+" Сытость: "+Str(Lives_cnt)+" "+txt$)
-EndProcedure
-
-Procedure add_text(numtext)
-  Text_cnt + numtext
-  SetGadgetText(Text,"Text: " + Str(Text_cnt))
-EndProcedure
-
-Procedure add_html(numhtml)
-  Html_cnt + numhtml
-  SetGadgetText(Html,"Html: " + Str(Html_cnt))
-EndProcedure
-
-Procedure add_design(numdes)
-  Design_cnt + numdes
-  SetGadgetText(Design,"Design: " + Str(Design_cnt))
-EndProcedure
-
-Procedure Money(num)
-  If num < 0
-    If Money < -num
-      Debug "Недостаточно денег" ;не работает
-    Else
-      Money + num
-    EndIf
-  Else
-    Money + num
-  EndIf
-EndProcedure
-
-Procedure Mood(num)
-  Mood_cnt + num
-EndProcedure
-
-Procedure Lives(num)
-  Lives_cnt + num
-EndProcedure
-
-Procedure Hide(name_of_btn)
-  If name_of_btn
-    HideGadget(name_of_btn,1)
-  Else
-    Debug "No btn"
-  EndIf
-EndProcedure
-
-Procedure Show(name_of_btn) ; почему-то не работает
-  If name_of_btn
-    HideGadget(name_of_btn,0)
-  Else
-    Debug "No btn"
-  EndIf
-EndProcedure
-
-NewList all_btn()
 
 Procedure add_btn(name_of_btn)
   AddElement(all_btn())
@@ -113,10 +56,10 @@ add_btn(forum)
 add_btn(stack)
 add_btn(friend)
 add_btn(github)
-add_btn(Text)
-add_btn(Html)
-add_btn(Design)
-add_btn(Backup)
+add_btn(Make_Text)
+add_btn(Make_Html)
+add_btn(Make_Design)
+add_btn(Make_Backup)
 add_btn(Buy_Text)
 add_btn(Buy_Html)
 add_btn(Buy_Design)
@@ -131,12 +74,61 @@ add_btn(Home_Food)
 add_btn(Walk)
 add_btn(Conference)
 add_btn(Club)
-add_btn(journal)
 add_btn(knowhow)
 add_btn(buy)
 add_btn(sell)
 add_btn(eat)
 add_btn(buzz)
+add_btn(WeGotWinner)
+
+Procedure tip(txt$)
+  Day+1
+  AddGadgetItem(journal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day)+" Денег: "+Str(Money)+"р "+" Настрой: "+
+                          Str(Mood_cnt)+" Сытость: "+Str(Lives_cnt)+" "+txt$)
+EndProcedure
+
+Procedure add_text(numtext)
+  Text_cnt + numtext
+  SetGadgetText(Make_Text,"Text: " + Str(Text_cnt))
+EndProcedure
+
+Procedure add_html(numhtml)
+  Html_cnt + numhtml
+  SetGadgetText(Make_Html,"Html: " + Str(Html_cnt))
+EndProcedure
+
+Procedure add_design(numdes)
+  Design_cnt + numdes
+  SetGadgetText(Make_Design,"Design: " + Str(Design_cnt))
+EndProcedure
+
+Procedure Money(num)
+  Money + num
+EndProcedure
+
+Procedure Mood(num)
+  Mood_cnt + num
+EndProcedure
+
+Procedure Lives(num)
+  Lives_cnt + num
+EndProcedure
+
+Procedure Hide(name_of_btn)
+  If name_of_btn
+    HideGadget(name_of_btn,1)
+  Else
+    Debug "No btn to hide" + Str(name_of_btn)
+  EndIf
+EndProcedure
+
+Procedure Show(name_of_btn) ; почему-то не работает
+  If name_of_btn
+    HideGadget(name_of_btn,0)
+  Else
+    Debug "No btn to show" + Str(name_of_btn)
+  EndIf
+EndProcedure
 
 Sell_Text_Price = 200
 
@@ -146,8 +138,9 @@ Buy_Design_Price = 800
 Buy_Hosting_Price = 600
 Buy_Domain_Price = 500
 
-; dead = 1 ; (стартовое состояние)
+dead = 1 ; (стартовое состояние)
 tip("Let get this party started")
+
 Repeat 
   event = WaitWindowEvent()
   If dead
@@ -160,6 +153,21 @@ Repeat
     Select EventGadget()
       Case google
         how_many_google = how_many_google + 1
+        Select how_many_google
+          Case 1
+            HideGadget(Make_Text,0)
+            HideGadget(Sell_Text,0)
+            tip("Вы узнали что можно писать тексты на продажу")
+          Case 2
+            HideGadget(forum,0)
+            tip("Вы аткнулись на форум вебмастеров")
+          Case 3 To 9
+            tip("Гугл кончился")
+          Case 10
+            tip("Вы заработали достижение Гуглер. Распечатайте и повесьте на стену")
+          Case 11 To 999
+            tip("Дальше ничего не произойдёт. Правда")
+        EndSelect
         tip("Вы погуглили "+Str(how_many_google)+" раз")
       Case forum
         how_many_forum = how_many_forum + 1
@@ -173,18 +181,18 @@ Repeat
       Case github
         how_many_github = how_many_github + 1
         tip("Вы покурили github "+Str(how_many_github)+" раз")
-      Case Text
+      Case Make_Text
         add_text(1)
         tip("Вы написали "+Str(Text_cnt)+" текст")
-      Case Html
+      Case Make_Html
         add_html(1)
         tip("Вы наверстали "+Str(Html_cnt)+" html")
-      Case Design
+      Case Make_Design
         add_design(1)
         tip("Вы нарисовали "+Str(Design_cnt)+" psd")
-      Case Backup
-        SetGadgetText(Backup,"Backup: Y")
-        DisableGadget(Backup,1)
+      Case Make_Backup
+        SetGadgetText(Make_Backup,"Backup: Y")
+        DisableGadget(Make_Backup,1)
         tip("Вы сделали бекап")
       Case Buy_Text
         If Money >= Buy_Text_Price
@@ -275,10 +283,18 @@ Repeat
         Mood(10)
         Money(-5000)
         tip("Вы потусили в клубе. ")
-      Case Win ; не работает
-        ForEach all_btn()
-          DisableGadget(all_btn(),1)
-        Next
+      Case WeGotWinner ; не работает
+        Debug "Win btn pressed"
+        If trigger
+          ForEach all_btn()
+            DisableGadget(all_btn(),1)
+          Next
+          trigger = 0
+        Else
+          ForEach all_btn()
+            DisableGadget(all_btn(),0)
+          Next
+        EndIf
     EndSelect
   EndIf
   
