@@ -1,28 +1,48 @@
-;добавлять в код ссылку на блогозапись, чтобы были перекрёстные ссылки и можно было в коде понять за какой это день 
-;http://at02.ru/easy-to-work-with-plan
-;расписать даты в расписании работ
-;добавить расписание работ прямо в код!
+; http://at02.ru/control-of-life
+; разобрался почему не работала кнопка выиграть! Потому что не была добавлена в Globals, чёрт бы их побрал
+; стал выводить журнал в Debug. Теперь его видно даже когда игра прибита. 
+; сделал контроль жизней. Ненаглядно. Вывел попапы о смерти. Всё равно кажется ненаглядно. 
+; работают и появляются в процессе игры все кнопки
+; в игру теперь можно выиграть. работает криво, но от начала до конца
 
+;план
 ;1 — 6 дни оживляем каждый столбец кнопок (2 мая)
 ;7 день тестим, правим косяки(3 мая)
 ;8 день придумываем десяток рандомных событий(4 мая)
 ;9 — 10 дни вносим рандом в игру(6 мая)
 ;11 тестим, даём тестить друзьям, правим косяки(7 мая)
 
-;почему не работает и не исчезает кнопка Win? думал дело в имени, переименовал - нифига. 
-;вставил дебаг просто на нажатие. не работает! мистика
-;переместил её выше. всё равно не работает. интересно, как вывести название переменной в Debug?
+;текущие задачи
+;просклонять разы
+;noodles можно уйти в минус. исправить
+;сделать чтобы появлялись подсказки к кнопкам после их использования
+;контроль настроения (сейчас оно ни на что не влияет)
+;убрать жизни из процедуры tip 
+;убрать двойные tip (напр. пригуглении вылазит сразу 2 строки. это неправильно)
+;уменьшать настроение только если пользователь несколько раз жмёт на одну и ту же кнопку
+;научиться привязывать события к количеству прошедших дней (напр. не может работать 2 дня)
+;применить ProcedureReturn на проверке денег. Убрать проверку денег из кода кнопок
+;переписать все Enumeration
+
+;вопросы
+;как сделать чтобы процедура выводила true или false? http://pastebin.com/sThk2Jyc
+;UPD разобрался. ProcedureReturn
+
+;сверх-задачи
+;нарисовать интерфейс
+;автоматическая отправка лога по http
 
 Global Window_0
 Global forum, google, stack, friend, github, Make_Text, Make_Html, Make_Design, Make_Backup
 Global Buy_Text, Buy_Html, Buy_Design, Buy_Domain, Buy_Hosting
-Global Sell_Text, Sell_Html, Sell_Design, Noodles, McDonut, Home_Food, Walk, Conference, Club
+Global Sell_Text, Sell_Html, Sell_Design, Noodles, McDonut, Home_Food, Walk, Conference, Club, WeGotWinner
 Global journal, knowledge, knowhow, buy, sell, eat, buzz, tip
 Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
+Global how_many_conference, how_many_forum, how_many_friend, how_many_github, how_many_google, how_many_stack
 Global NewList all_btn()
 
 Procedure OpenWindow_0(width = 670, height = 400)
-  Window_0 = OpenWindow(#PB_Any, #PB_Ignore, #PB_Ignore, width, height, "Мумулятор вебмастера v0.2", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  Window_0 = OpenWindow(#PB_Any, #PB_Ignore, #PB_Ignore, width, height, "Отуплятор вебмастера v0.2", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
   forum = ButtonGadget(#PB_Any, 10, 60, 100, 25, "Read Forum")
   google = ButtonGadget(#PB_Any, 10, 30, 100, 25, "Google")
   stack = ButtonGadget(#PB_Any, 10, 90, 100, 25, "Stackoverflow")
@@ -46,7 +66,6 @@ Procedure OpenWindow_0(width = 670, height = 400)
   Walk = ButtonGadget(#PB_Any, 560, 30, 100, 25, "Walk")
   Conference = ButtonGadget(#PB_Any, 560, 90, 100, 25, "Conference")
   Club = ButtonGadget(#PB_Any, 560, 60, 100, 25, "Club")
-  WeGotWinner = ButtonGadget(#PB_Any, 560, 150, 100, 25, "Win")
   journal = EditorGadget(#PB_Any, 10, 180, 650, 210)
   knowledge = TextGadget(#PB_Any, 10, 10, 100, 20, "Знания")
   knowhow = TextGadget(#PB_Any, 120, 10, 100, 20, "Умения")
@@ -55,6 +74,7 @@ Procedure OpenWindow_0(width = 670, height = 400)
   eat = TextGadget(#PB_Any, 450, 10, 100, 20, "Кушать")
   buzz = TextGadget(#PB_Any, 560, 10, 100, 20, "Развлекаться")
   comment = TextGadget(#PB_Any, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнал ↓") ; убрать в финальном релизе
+  WeGotWinner = ButtonGadget(#PB_Any, 560, 150, 100, 25, "Win")
 EndProcedure
 
 OpenWindow_0()
@@ -86,7 +106,7 @@ add_btn(Home_Food)
 ;add_btn(Walk)
 add_btn(Conference)
 add_btn(Club)
-add_btn(WeGotWinner)
+;add_btn(WeGotWinner)
 add_btn(knowhow)
 add_btn(buy)
 add_btn(sell)
@@ -97,8 +117,50 @@ Procedure tip(txt$)
   Day+1
   Lives_cnt-1
   Mood_cnt-1
-  AddGadgetItem(journal,0,FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss", Date())+ " День: " + Str(Day)+" $: "+Str(Money)+" (: "+
-                          Str(Mood_cnt)+" Сыт: "+Str(Lives_cnt)+" "+txt$)
+  say$ = FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date()) + " День:"+Str(Day)+" $:"+Str(Money)+" ☯:"+
+         Str(Mood_cnt)+" ♥:"+Str(Lives_cnt)+" "+txt$
+  AddGadgetItem(journal,0,say$)
+  Debug say$ 
+EndProcedure
+
+; в процедуру попадает несколько слов. все с маленькой буквы. 
+; она выстраивает их в произвольном порядке, а для первого слова делает большой первую букву
+Procedure.s rtip(txt$)
+  Day+1
+  Lives_cnt-1
+  Mood_cnt-1
+  txt$ = LCase(Mid(txt$,0,1))+Mid(txt$,2)
+  Debug txt$
+  NewList words.s()
+  ;
+  LenghWord = FindString(txt$," ")
+  word$ = Mid(txt$,startSearch,LenghWord-startSearch-1)
+  AddElement(words())
+  words() = word$
+  word_cnt + 1
+  startSearch = LenghWord + 1
+  ; если удалить кусок кода выше - прога добавляет лишний пробел после первого слова
+  While Not LenghWord = 0
+    word$ = Mid(txt$,startSearch,LenghWord-startSearch)
+    AddElement(words())
+    words() = word$
+    word_cnt + 1
+    startSearch = LenghWord + 1
+    LenghWord = FindString(txt$," ",startSearch)
+  Wend
+  ;
+  word$ = Mid(txt$,startSearch,Len(txt$)-1)
+  AddElement(words())
+  words() = word$
+  word_cnt + 1
+  ;если удалить кусок кода выше - то пропадает последнее слово
+  RandomizeList(words())
+  ForEach words()
+    output$ + words() + " "; а вот эта зараза добавляет лишнюю _ куда-попало.
+  Next
+  output$ = FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date()) + " День:"+Str(Day)+" $:"+Str(Money)+" ☯:"+
+            Str(Mood_cnt)+" ♥:"+Str(Lives_cnt)+" "+UCase(Mid(output$,0,1))+Mid(output$,2)
+  AddGadgetItem(journal,0,output$)
 EndProcedure
 
 Procedure add_text(numtext)
@@ -117,7 +179,16 @@ Procedure add_design(numdes)
 EndProcedure
 
 Procedure Money(num)
-  Money + num
+  If num < 0
+    If Money < -num
+      tip("Недостаточно денег")
+      Debug "Недостаточно денег"
+    Else
+      Money + num
+    EndIf
+  Else
+    Money + num
+  EndIf  
 EndProcedure
 
 Procedure Mood(num)
@@ -136,7 +207,7 @@ Procedure Hide(name_of_btn)
   EndIf
 EndProcedure
 
-Procedure Show(name_of_btn) ; почему-то не работает
+Procedure Show(name_of_btn)
   If name_of_btn
     HideGadget(name_of_btn,0)
   Else
@@ -155,6 +226,15 @@ Buy_Domain_Price = 600
 Procedure start()
   Lives_cnt = 10
   Mood_cnt = 10
+  Text_cnt = 0
+  Html_cnt = 0
+  Design_cnt = 0
+  how_many_conference = 0
+  how_many_google = 0
+  how_many_forum = 0
+  how_many_friend = 0
+  how_many_stack = 0
+  how_many_github = 0
   tip("Let get this party started")
 EndProcedure
 dead = 1 ; (стартовое состояние)
@@ -164,7 +244,7 @@ Repeat
   event = WaitWindowEvent()
   ;помощ друга в первый раз, близко к смерти (может вырубить при этом все кнопки?)
   If Lives_cnt <= 1
-    HideGadget(friend,0)
+    Show(friend)
   EndIf
   
   ; если умер - спрятать все кнопки
@@ -174,219 +254,277 @@ Repeat
     Next
     dead = 0
   EndIf
-  If event = #PB_Event_Gadget
-    Select EventGadget()
-        
-      Case google
-        how_many_google = how_many_google + 1
-        Select how_many_google
-          Case 1
-            HideGadget(sell,0)
-            HideGadget(Make_Text,0)
-            HideGadget(knowhow,0)
-            HideGadget(Sell_Text,0)
-            tip("Вы узнали что можно писать тексты на продажу")
-          Case 2
-            HideGadget(forum,0)
-            tip("Вы аткнулись на форум вебмастеров")
-          Case 3 To 9
-            tip("Гугл кончился")
-          Case 10
-            tip("Вы заработали достижение Гуглер. Распечатайте и повесьте на стену")
-          Case 11 To 999
-            tip("Дальше ничего не произойдёт. Правда")
-        EndSelect
-        tip("Вы погуглили "+Str(how_many_google)+" раз")
-        
-      Case forum
-        how_many_forum = how_many_forum + 1
-        Select how_many_forum
-          Case 1
-            HideGadget(stack,0)
-            tip("На форуме вам дали ссылку на stackowerflow")
-          Case 2
-            HideGadget(github,0)
-            tip("Вам посоветовали почитать исходники на github")
-          Case 3
-            HideGadget(buy,0)
-            HideGadget(Buy_Text,0)
-            tip("Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
-          Case 4
-            HideGadget(Buy_Html,0)
-            tip("Вам дали ссылку на фриланс. Вы можете покупать html. Это дешевле чем делать самому")
-          Case 5
-            HideGadget(Buy_Design,0)
-            tip("Теперь вы можете покупать дизайн. ")
-          Case 6
-            tip("Снижение цен на покупку дизайна, текстов и кода!")
-            Buy_Text_Price = 90
-            Buy_Html_Price = 450
-            Buy_Design_Price = 750
-        EndSelect
-        tip("Вы почитали форум "+Str(how_many_forum)+" раз")
-        
-      Case stack
-        how_many_stack = how_many_stack + 1
-        tip("Вы поискали на stackowerflow "+Str(how_many_stack)+" раз")
-        Select how_many_stack
-          Case 1
-            HideGadget(Make_Design,0)
-            tip("Вы изучили как делать дизайн")
-          Case 2
-            HideGadget(Sell_Design,0)
-            tip("Вы познали как продать ваш дизайн")
-          Case 3
-            HideGadget(McDonut,0)
-            tip("Вам посоветовали сходить в McDonuts вместо вечного поедания дошираков")
-        EndSelect
-        
-      Case friend
-        how_many_friend = how_many_friend + 1
-        Select how_many_friend
-          Case 1
-            HideGadget(Noodles,0)
-            Lives(10)
-            tip("Друг принёс вам запас дошираков. И посоветовал следить за сытостью")
-          Case 2
-            HideGadget(Make_Backup,0)
-            tip("Друг рассказал вам о пользе резервного копирования")
-          Case 3
-            tip("Вы напились с другом. Не можете работать 2 дня")
-          Case 4
-            tip("Вы снова напились с другом. Код/текст/дизайн x2")
-        EndSelect
-        tip("Вы поговорили с другом "+Str(how_many_friend)+" раз")
-        
-      Case github
-        how_many_github = how_many_github + 1
-        Select how_many_github
-          Case 1
-            HideGadget(Make_Html,0)
-            tip("Знания html вёрстки снизошли на вас")
-          Case 2
-            HideGadget(Sell_Html,0)
-            tip("Как деньги получить за говнокод свой познали")
-          Case 3
-            HideGadget(Conference,0)
-            tip("Читая чей-то код на github вы узнали что можно сходить на конференцию")
-        EndSelect
-        tip("Вы покурили github "+Str(how_many_github)+" раз")
-        
-      Case Make_Text
-        add_text(1)
-        tip("Вы написали "+Str(Text_cnt)+" текст")
-      Case Make_Html
-        add_html(1)
-        tip("Вы наверстали "+Str(Html_cnt)+" html")
-      Case Make_Design
-        add_design(1)
-        tip("Вы нарисовали "+Str(Design_cnt)+" psd")
-      Case Make_Backup
-        SetGadgetText(Make_Backup,"Backup: Y")
-        DisableGadget(Make_Backup,1)
-        tip("Вы сделали бекап")
-      Case Buy_Text
-        If Money >= Buy_Text_Price
-          Money(-Buy_Text_Price)
-          add_text(1)
-          tip("Вы купили текст за "+Str(Buy_Text_Price))
-        ElseIf Money < Buy_Text_Price
-          tip("Недостаточно денег. Нужно "+Str(Buy_Text_Price))
-        EndIf
-      Case Buy_Html
-        If Money >= Buy_Html_Price
-          Money(-Buy_Html_Price)
-          add_html(1)
-          tip("Вы купили html за "+Str(Buy_Html_Price))
-        ElseIf Money < Buy_Html_Price
-          tip("Недостаточно денег. Нужно "+Str(Buy_Html_Price))
-        EndIf
-      Case Buy_Design
-        If Money >= Buy_Design_Price
-          Money(-Buy_Design_Price)
-          add_design(1)
-          tip("Вы купили дизайн за "+Str(Buy_Design_Price))
-        ElseIf Money < Buy_Design_Price
-          tip("Недостаточно денег. Нужно "+Str(Buy_Design_Price))
-        EndIf
-      Case Buy_Domain
-        If Money >= 600
-          Money(-600)
-          SetGadgetText(Buy_Domain,"Domain: Y")
-          DisableGadget(Buy_Domain,1)
-          tip("Вы купили домен за 600")
-        ElseIf Money < 600
-          tip("Недостаточно денег. Нужно 600")
-        EndIf
-      Case Buy_Hosting
-        If Money >= Buy_Hosting_Price
-          Money(-Buy_Hosting_Price)
-          SetGadgetText(Buy_Hosting,"Hosting: Y")
-          DisableGadget(Buy_Hosting,1)
-          tip("Вы купили хостинг за "+Str(Buy_Hosting_Price))
-        ElseIf Money < Buy_Hosting_Price
-          tip("Недостаточно денег. Нужно "+Str(Buy_Hosting_Price))
-        EndIf
-      Case Sell_Text
-        If Text_cnt <= 0
-          tip("Вы не можете продать текст. У вас его нет")
-        ElseIf Text_cnt > 0
-          add_text(-1)
-          Money(Sell_Text_Price)
-          tip("Вы продали текст. +"+Str(Sell_Text_Price))
-        EndIf
-      Case Sell_Html
-        If Html_cnt <= 0
-          tip("Вы не можете продать html. У вас его нет")
-        ElseIf Html_cnt > 0
-          add_html(-1)
-          Money(1000)
-          tip("Вы продали html. +1000")
-        EndIf
-      Case Sell_Design
-        If Design_cnt <= 0
-          tip("Вы не можете продать дизайн. У вас его нет")
-        ElseIf Design_cnt > 0
-          add_design(-1)
-          Money(1200)
-          tip("Вы продали дизайн. +1200")
-        EndIf
-      Case Noodles
-        Money(-100)
-        Lives(2)
-        tip("Вы поели макарон")
-      Case McDonut
-        Money(-200)
-        Lives(4)
-        tip("Вы перекусили в Макдаке")
-      Case Home_Food
-        Money(-300)
-        Lives(10)
-        Mood(1)
-        tip("Вы насладились домашней едой")
-      Case Walk
-        Mood(2)
-        tip("Вы прогулялись")
-      Case Conference
-        Mood(4)
-        tip("Вы посетили конфенцию. Получили новые знания")
-      Case Club
-        Mood(10)
-        Money(-5000)
-        tip("Вы потусили в клубе. ")
-      Case WeGotWinner ; не работает
-        Debug "Win btn pressed"
-        If trigger
-          ForEach all_btn()
-            DisableGadget(all_btn(),1)
-          Next
-          trigger = 0
-        Else
-          ForEach all_btn()
-            DisableGadget(all_btn(),0)
-          Next
-        EndIf
-    EndSelect
-  EndIf
   
+  ;проверка жизней
+  If Lives_cnt <= 0
+    Result = MessageRequester("Костлявая","Вы погибли от голода")
+    dead = 1
+    starving = starving + 1
+    tip("Вы погибли от голода")
+    start()
+  ElseIf Lives_cnt >= 101
+    Result = MessageRequester("Костлявая","Куда столько жрать?")
+    dead = 1
+    overeat = overeat + 1
+    tip("Вы погибли от переедания")
+    start()
+  Else ;если жизни есть запускаем основной цикл
+    If event = #PB_Event_Gadget
+      Select EventGadget()
+        Case google
+          how_many_google = how_many_google + 1
+          Select how_many_google
+            Case 1
+              Show(sell)
+              Show(Make_Text)
+              Show(knowhow)
+              Show(Sell_Text)
+              tip("Вы узнали что можно писать тексты на продажу")
+            Case 2
+              Show(forum)
+              tip("Вы наткнулись_на форум вебмастеров")
+            Case 3 To 9
+              tip("Гугл кончился")
+            Case 10
+              tip("Вы заработали достижение Гуглер. Распечатайте и повесьте на стену")
+            Case 11
+              tip("Дальше ничего не произойдёт. Правда")
+          EndSelect
+          rtip("Вы погуглили "+Str(how_many_google)+" раз")
+          
+        Case forum
+          how_many_forum = how_many_forum + 1
+          Select how_many_forum
+            Case 1
+              Show(stack)
+              tip("На форуме вам дали ссылку на stackowerflow")
+            Case 2
+              Show(github)
+              tip("Вам посоветовали почитать исходники на github")
+            Case 3
+              Show(buy)
+              Show(Buy_Text)
+              tip("Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
+            Case 4
+              Show(Buy_Html)
+              tip("Вам дали ссылку на фриланс. Вы можете покупать html. Это дешевле чем делать самому")
+            Case 5
+              Show(Buy_Design)
+              tip("Теперь вы можете покупать дизайн. ")
+            Case 6
+              tip("Снижение цен на покупку дизайна, текстов и кода!")
+              Buy_Text_Price = 90
+              Buy_Html_Price = 450
+              Buy_Design_Price = 750
+          EndSelect
+          rtip("Вы почитали форум "+Str(how_many_forum)+" раз")
+          
+        Case stack
+          how_many_stack = how_many_stack + 1
+          tip("Вы поискали на stackowerflow "+Str(how_many_stack)+" раз")
+          Select how_many_stack
+            Case 1
+              Show(Make_Design)
+              rtip("Вы изучили как_делать дизайн")
+            Case 2
+              Show(Sell_Design)
+              rtip("Вы познали как_продать ваш дизайн")
+            Case 3
+              Show(McDonut)
+              rtip("Вам посоветовали сходить в_McDonuts вместо вечного поедания дошираков")
+          EndSelect
+          
+        Case friend
+          how_many_friend = how_many_friend + 1
+          Select how_many_friend
+            Case 1
+              Show(Noodles)
+              Lives(10)
+              tip("Друг принёс вам запас дошираков. И посоветовал следить за сытостью")
+            Case 2
+              Show(Make_Backup)
+              tip("Друг рассказал вам о пользе резервного копирования")
+            Case 3
+              tip("Вы напились с другом. Не можете работать 2 дня")
+            Case 4
+              tip("Вы снова напились с другом. Код/текст/дизайн x2")
+            Case 5
+              Show(Club)
+              tip("Друг поведал вам о существовании клуба. Подымает настроение")
+          EndSelect
+          tip("Вы поговорили с другом "+Str(how_many_friend)+" раз")
+          
+        Case github
+          how_many_github = how_many_github + 1
+          Select how_many_github
+            Case 1
+              Show(Make_Html)
+              tip("Знания html вёрстки снизошли на вас")
+            Case 2
+              Show(Sell_Html)
+              tip("Как деньги получить за говнокод свой познали")
+            Case 3
+              Show(Conference)
+              tip("Читая чей-то код на github вы узнали что можно сходить на конференцию")
+          EndSelect
+          tip("Вы покурили github "+Str(how_many_github)+" раз")
+          
+        Case Make_Text
+          add_text(1)
+          rtip("Вы написали "+Str(Text_cnt)+" текст")
+        Case Make_Html
+          add_html(1)
+          rtip("Вы наверстали "+Str(Html_cnt)+" html")
+        Case Make_Design
+          add_design(1)
+          rtip("Вы нарисовали "+Str(Design_cnt)+" psd")
+        Case Make_Backup
+          SetGadgetText(Make_Backup,"Backup: Y")
+          DisableGadget(Make_Backup,1)
+          rtip("Вы сделали бекап")
+          
+        Case Buy_Text
+          If Money >= Buy_Text_Price
+            Money(-Buy_Text_Price)
+            add_text(1)
+            tip("Вы купили текст за "+Str(Buy_Text_Price))
+          ElseIf Money < Buy_Text_Price
+            tip("Недостаточно денег. Нужно "+Str(Buy_Text_Price))
+          EndIf
+        Case Buy_Html
+          If Money >= Buy_Html_Price
+            Money(-Buy_Html_Price)
+            add_html(1)
+            tip("Вы купили html за "+Str(Buy_Html_Price))
+          ElseIf Money < Buy_Html_Price
+            tip("Недостаточно денег. Нужно "+Str(Buy_Html_Price))
+          EndIf
+        Case Buy_Design
+          If Money >= Buy_Design_Price
+            Money(-Buy_Design_Price)
+            add_design(1)
+            tip("Вы купили дизайн за "+Str(Buy_Design_Price))
+          ElseIf Money < Buy_Design_Price
+            tip("Недостаточно денег. Нужно "+Str(Buy_Design_Price))
+          EndIf
+        Case Buy_Domain
+          If Money >= 600
+            Money(-600)
+            SetGadgetText(Buy_Domain,"Domain: Y")
+            DisableGadget(Buy_Domain,1)
+            tip("Вы купили домен за 600")
+          ElseIf Money < 600
+            tip("Недостаточно денег. Нужно 600")
+          EndIf
+        Case Buy_Hosting
+          If Money >= Buy_Hosting_Price
+            Money(-Buy_Hosting_Price)
+            SetGadgetText(Buy_Hosting,"Hosting: Y")
+            DisableGadget(Buy_Hosting,1)
+            tip("Вы купили хостинг за "+Str(Buy_Hosting_Price))
+          ElseIf Money < Buy_Hosting_Price
+            tip("Недостаточно денег. Нужно "+Str(Buy_Hosting_Price))
+          EndIf
+          
+        Case Sell_Text
+          If Text_cnt <= 0
+            tip("Вы не можете продать текст. У вас его нет")
+          ElseIf Text_cnt > 0
+            add_text(-1)
+            Money(Sell_Text_Price)
+            tip("Вы продали текст. +"+Str(Sell_Text_Price))
+          EndIf
+        Case Sell_Html
+          If Html_cnt <= 0
+            tip("Вы не можете продать html. У вас его нет")
+          ElseIf Html_cnt > 0
+            add_html(-1)
+            Money(1000)
+            tip("Вы продали html. $ +1000")
+          EndIf
+        Case Sell_Design
+          If Design_cnt <= 0
+            tip("Вы не можете продать дизайн. У вас его нет")
+          ElseIf Design_cnt > 0
+            add_design(-1)
+            Money(1200)
+            tip("Вы продали дизайн. $ +1200")
+          EndIf
+          
+        Case Noodles
+          If Money > 100
+            Money(-100)
+            Lives(20)
+            tip("Вы поели макарон. ♥ +20")
+          Else
+            Lives(1)
+            rtip("Недостаточно денег. Надо 100")
+          EndIf
+        Case McDonut
+          If Money > 200
+            Money(-200)
+            Lives(40)
+            tip("Вы перекусили в Макдаке. ♥ +40")
+          Else
+            Lives(1)
+            tip("Недостаточно денег на макдак. Надо 200")
+          EndIf
+        Case Home_Food
+          If Money > 300
+            Money(-300)
+            Lives_cnt = 100
+            Mood(1)
+            tip("Вы насладились домашней едой. ♥ full")
+          Else
+            Lives(1)
+            tip("Недостаточно денег на домашнюю еду. Надо 300")
+          EndIf
+          
+        Case Walk
+          Mood(2)
+          tip("Вы прогулялись")
+        Case Conference
+          how_many_conference = how_many_conference + 1
+          Select how_many_conference
+            Case 1
+              Show(Buy_Hosting)
+              Mood(40)
+              tip("Вы посетили конференцию. Узнали как купить хостинг. ☯ +40")
+            Case 2
+              Show(Buy_Domain)
+              Mood(40)
+              tip("Вы посетили конференцию. Узнали как купить домен. ☯ +40")
+            Case 3 To 999
+              Mood(40)
+              tip("Вы посетили конференцию. ☯ +40")
+          EndSelect
+        Case Club
+          If Money > 5000
+            how_many_club = how_many_club + 1
+            Mood_cnt = 100
+            Money(-5000)
+            Select how_many_club
+              Case 1
+                tip("Вы потусили в клубе. ☯ full")
+              Case 2
+                Show(Home_Food)
+                tip("Вы познакомились с девушкой в клубе. Доступна домашняя еда")
+              Case 3 To 999
+                tip("Вы потусили в клубе. ☯ full")
+            EndSelect
+          Else
+            tip("Недостаточно денег на клуб. Надо 5000.")
+          EndIf
+          
+        Case WeGotWinner
+          If Text_cnt >= 50 And Html_cnt >= 3 And Design_cnt >= 3 And GetGadgetText(Buy_Domain) = "Domain: Y" And GetGadgetText(Buy_Hosting) = "Hosting: Y"
+            Result = MessageRequester("Финиш","Вы сделали полноценный сайт и выиграли. Отправьте пожалуйста журнал мне на почту (указана в журнале)")
+            AddGadgetItem(journal,0,"Вы сделали полноценный сайт и выиграли. Отправьте пожалуйста журнал мне на почту")
+            AddGadgetItem(journal,0,"tolik@at02.ru")
+          Else
+            tip("Чтобы выиграть нужно 50 текстов, 3 дизайна, 3 html, домен и хостинг")
+          EndIf
+      EndSelect
+    EndIf
+  EndIf
 Until event = #PB_Event_CloseWindow
