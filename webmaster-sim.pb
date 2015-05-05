@@ -1,15 +1,20 @@
-; попробовал EnableExplicit - ругается на необъявленные в  Define, Global, Protected или Static переменные. Мне не подходит, ибо у меня таких переменных много
-; переделал всё на Enumeration. Проверил. Работает.
+;идея: симулятор чувака, который собирает и барыжит частями космического корабля. То же самое что и сайт, только вместо кнопок html design и тп - запчасти корабля. Так цель игры выглядит даже логичней чем с сайтом.
 
-;план
+;===Сделал===
+; попробовал EnableExplicit - ругается на необъявленные в Define, Global, Protected или Static переменные. Мне не подходит, ибо у меня таких переменных много
+; переделал всё на Enumeration. Проверил. Работает.
+; переход на Enumeration 496 -> 492 строк кода. Специально ничего другого не трогал. Мало =(
+; правки кучи мелких багов
+; просклонять разы - выполнено
+
+;===План===
 ;1 — 6 дни оживляем каждый столбец кнопок (2 мая)
 ;7 день тестим, правим косяки(3 мая)
 ;8 день придумываем десяток рандомных событий(4 мая)
 ;9 — 10 дни вносим рандом в игру(6 мая)
 ;11 тестим, даём тестить друзьям, правим косяки(7 мая)
 
-;текущие задачи
-;просклонять разы
+;===Текущие задачи===
 ;сделать чтобы появлялись подсказки к кнопкам после их использования
 ;контроль настроения (сейчас оно ни на что не влияет)
 ;убрать жизни из процедуры tip 
@@ -17,9 +22,8 @@
 ;уменьшать настроение только если пользователь несколько раз жмёт на одну и ту же кнопку
 ;научиться привязывать события к количеству прошедших дней (напр. не может работать 2 дня)
 ;применить ProcedureReturn на проверке денег. Убрать проверку денег из кода кнопок
-;переписать все Enumeration
 
-;сверх-задачи
+;===Сверх-Задачи===
 ;нарисовать интерфейс
 ;автоматическая отправка лога по http
 
@@ -110,44 +114,21 @@ Procedure tip(txt$)
   Debug say$ 
 EndProcedure
 
-; в процедуру попадает несколько слов. все с маленькой буквы. 
+; в процедуру попадает несколько слов.
 ; она выстраивает их в произвольном порядке, а для первого слова делает большой первую букву
 Procedure.s rtip(txt$)
-  Day+1
-  Lives_cnt-1
-  Mood_cnt-1
-  txt$ = LCase(Mid(txt$,0,1))+Mid(txt$,2)
-  Debug txt$
+  txt$ = LCase(txt$)
   NewList words.s()
-  ;
-  LenghWord = FindString(txt$," ")
-  word$ = Mid(txt$,startSearch,LenghWord-startSearch-1)
-  AddElement(words())
-  words() = word$
-  word_cnt + 1
-  startSearch = LenghWord + 1
-  ; если удалить кусок кода выше - прога добавляет лишний пробел после первого слова
-  While Not LenghWord = 0
-    word$ = Mid(txt$,startSearch,LenghWord-startSearch)
+  For i = 1 To CountString(txt$," ")+1
     AddElement(words())
-    words() = word$
-    word_cnt + 1
-    startSearch = LenghWord + 1
-    LenghWord = FindString(txt$," ",startSearch)
-  Wend
-  ;
-  word$ = Mid(txt$,startSearch,Len(txt$)-1)
-  AddElement(words())
-  words() = word$
-  word_cnt + 1
-  ;если удалить кусок кода выше - то пропадает последнее слово
-  RandomizeList(words())
-  ForEach words()
-    output$ + words() + " "; а вот эта зараза добавляет лишнюю _ куда-попало.
+    words() = StringField(txt$,i," ")
   Next
-  output$ = FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date()) + " День:"+Str(Day)+" $:"+Str(Money)+" ☯:"+
-            Str(Mood_cnt)+" ♥:"+Str(Lives_cnt)+" "+UCase(Mid(output$,0,1))+Mid(output$,2)
-  AddGadgetItem(#journal,0,output$)
+  RandomizeList(words())
+  ForEach words() 
+    output$ + words() + " "
+  Next
+  output$ = UCase(Mid(output$,0,1))+Mid(output$,2) ; делаем первую букву большой
+  tip(output$)
 EndProcedure
 
 Procedure add_text(numtext)
@@ -266,59 +247,64 @@ Repeat
               Show(#Make_Text)
               Show(#knowhow)
               Show(#Sell_Text)
-              tip("Вы узнали что можно писать тексты на продажу")
+              tip("Вы погуглили 1 раз. Узнали что можно писать тексты на продажу")
             Case 2
               Show(#forum)
-              tip("Вы наткнулись_на форум вебмастеров")
-            Case 3 To 9
-              tip("Гугл кончился")
+              tip("Вы погуглили 2 раза. Наткнулись_на форум вебмастеров")
+            Case 3 To 4
+              tip("Вы погуглили "+Str(how_many_google)+" раза. Гугл кончился")
+            Case 5 To 9
+              tip("Вы погуглили "+Str(how_many_google)+" раз. Гугл кончился")
             Case 10
-              tip("Вы заработали достижение Гуглер. Распечатайте и повесьте на стену")
+              tip("Вы погуглили 10 раз. Заработали достижение Гуглер. Распечатайте и повесьте на стену")
             Case 11
-              tip("Дальше ничего не произойдёт. Правда")
+              tip("Вы погуглили "+Str(how_many_google)+" раз. Дальше ничего. Правда")
           EndSelect
-          rtip("Вы погуглили "+Str(how_many_google)+" раз")
           
         Case #forum
           how_many_forum = how_many_forum + 1
           Select how_many_forum
             Case 1
               Show(#stack)
-              tip("На форуме вам дали ссылку на stackowerflow")
+              tip("Вы почитали форум 1 раз. На форуме вам дали ссылку на stackowerflow")
             Case 2
               Show(#github)
-              tip("Вам посоветовали почитать исходники на github")
+              tip("Вы почитали форум 2 раза. Вам посоветовали покурить исходники Github")
             Case 3
               Show(#buy)
               Show(#Buy_Text)
-              tip("Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
+              tip("Вы почитали форум 3 раза. Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
             Case 4
               Show(#Buy_Html)
               tip("Вам дали ссылку на фриланс. Вы можете покупать html. Это дешевле чем делать самому")
             Case 5
               Show(#Buy_Design)
-              tip("Теперь вы можете покупать дизайн. ")
+              tip("Вы почитали форум 5 раз. Теперь вы можете покупать дизайн. ")
             Case 6
               tip("Снижение цен на покупку дизайна, текстов и кода!")
               Buy_Text_Price = 90
               Buy_Html_Price = 450
               Buy_Design_Price = 750
+            Case 7 To 999
+              rtip("Вы почитали форум "+Str(how_many_forum)+"_раз")
           EndSelect
-          rtip("Вы почитали форум "+Str(how_many_forum)+" раз")
           
         Case #stack
           how_many_stack = how_many_stack + 1
-          tip("Вы поискали на stackowerflow "+Str(how_many_stack)+" раз")
           Select how_many_stack
             Case 1
               Show(#Make_Design)
               rtip("Вы изучили как_делать дизайн")
             Case 2
               Show(#Sell_Design)
-              rtip("Вы познали как_продать ваш дизайн")
+              rtip("Вы познали как_продать дизайн")
             Case 3
               Show(#McDonut)
-              rtip("Вам посоветовали сходить в_McDonuts вместо вечного поедания дошираков")
+              tip("Вам посоветовали сходить в_McDonuts вместо вечного поедания дошираков")
+            Case 4
+              tip("Вы поискали на stackowerflow 4 раза")
+            Case 5 To 999
+              tip("stackowerflow "+Str(how_many_stack)+" раз")
           EndSelect
           
         Case #friend
@@ -338,8 +324,9 @@ Repeat
             Case 5
               Show(#Club)
               tip("Друг поведал вам о существовании клуба. Подымает настроение")
+            Case 6 To 999
+              tip("Вы поговорили с другом "+Str(how_many_friend)+" раз")
           EndSelect
-          tip("Вы поговорили с другом "+Str(how_many_friend)+" раз")
           
         Case #github
           how_many_github = how_many_github + 1
@@ -353,8 +340,11 @@ Repeat
             Case 3
               Show(#Conference)
               tip("Читая чей-то код на github вы узнали что можно сходить на конференцию")
+            Case 4
+              rtip("Вы покурили github 4_раза")
+            Case 5 To 999
+              rtip("Вы покурили github "+Str(how_many_github)+"_раз")
           EndSelect
-          tip("Вы покурили github "+Str(how_many_github)+" раз")
           
         Case #Make_Text
           add_text(1)
@@ -374,15 +364,15 @@ Repeat
           If Money >= Buy_Text_Price
             Money(-Buy_Text_Price)
             add_text(1)
-            tip("Вы купили текст за "+Str(Buy_Text_Price))
+            rtip("Вы купили текст за_$"+Str(Buy_Text_Price))
           ElseIf Money < Buy_Text_Price
-            tip("Недостаточно денег. Нужно "+Str(Buy_Text_Price))
+            tip("Недостаточно денег. Нужно_"+Str(Buy_Text_Price))
           EndIf
         Case #Buy_Html
           If Money >= Buy_Html_Price
             Money(-Buy_Html_Price)
             add_html(1)
-            tip("Вы купили html за "+Str(Buy_Html_Price))
+            rtip("Вы купили html за_$"+Str(Buy_Html_Price))
           ElseIf Money < Buy_Html_Price
             tip("Недостаточно денег. Нужно "+Str(Buy_Html_Price))
           EndIf
@@ -439,32 +429,32 @@ Repeat
           EndIf
           
         Case #Noodles
-          If Money > 100
+          If Money >= 100
             Money(-100)
             Lives(20)
-            tip("Вы поели макарон. ♥ +20")
+            tip("Вы поели макарон. ♥+20")
           Else
             Lives(1)
-            rtip("Недостаточно денег. Надо 100")
+            rtip("Недостаточно денег. Надо $100")
           EndIf
         Case #McDonut
           If Money > 200
             Money(-200)
             Lives(40)
-            tip("Вы перекусили в Макдаке. ♥ +40")
+            tip("Вы перекусили в Макдаке. ♥+40")
           Else
             Lives(1)
-            tip("Недостаточно денег на макдак. Надо 200")
+            tip("Недостаточно денег на макдак. Надо $200")
           EndIf
         Case #Home_Food
           If Money > 300
             Money(-300)
             Lives_cnt = 100
             Mood(1)
-            tip("Вы насладились домашней едой. ♥ full")
+            tip("Вы насладились домашней едой. ♥full")
           Else
             Lives(1)
-            tip("Недостаточно денег на домашнюю еду. Надо 300")
+            tip("Недостаточно денег на домашнюю еду. Надо $300")
           EndIf
           
         Case #Walk
@@ -476,14 +466,14 @@ Repeat
             Case 1
               Show(#Buy_Hosting)
               Mood(40)
-              tip("Вы посетили конференцию. Узнали как купить хостинг. ☯ +40")
+              tip("Вы посетили конференцию. Узнали как купить хостинг. ☯+40")
             Case 2
               Show(#Buy_Domain)
               Mood(40)
-              tip("Вы посетили конференцию. Узнали как купить домен. ☯ +40")
+              tip("Вы посетили конференцию. Узнали как купить домен. ☯+40")
             Case 3 To 999
               Mood(40)
-              tip("Вы посетили конференцию. ☯ +40")
+              tip("Вы посетили конференцию. ☯+40")
           EndSelect
         Case #Club
           If Money > 5000
@@ -492,15 +482,15 @@ Repeat
             Money(-5000)
             Select how_many_club
               Case 1
-                tip("Вы потусили в клубе. ☯ full")
+                tip("Вы потусили в клубе. ☯full")
               Case 2
                 Show(#Home_Food)
                 tip("Вы познакомились с девушкой в клубе. Доступна домашняя еда")
               Case 3 To 999
-                tip("Вы потусили в клубе. ☯ full")
+                tip("Вы потусили в клубе. ☯full")
             EndSelect
           Else
-            tip("Недостаточно денег на клуб. Надо 5000.")
+            tip("Недостаточно денег на клуб. Надо $5000.")
           EndIf
           
         Case #WeGotWinner
