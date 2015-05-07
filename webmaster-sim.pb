@@ -1,7 +1,8 @@
 ;===Сделал===
-;conference -$
-;выписал все задачи с листочка в код
-;rtip недостаточно денег на еду
+;Сделал глобальную проверку денег.
+;Использовал ProcedureReturn
+;Обнулять счётчики денег, текста, кода, дизайна при смерти - сделал. Причём нашёл интересный выход. Добавить отрицательное число имеющихся тектстов/дизайна/кода
+;Починил гугление. Не работало дальше 10
 
 ;===План===
 ;1 — 6 дни оживляем каждый столбец кнопок (2 мая)
@@ -19,16 +20,13 @@
 ;событие завязанное на бекап
 ;rtip вы поели
 ;вывести в конце переедание и недоедание
-;обнулять счётчики денег, текста, кода, дизайна при смерти
 ;научиться делать фразы состоящие из рандома и из не рандома
 ;какая кнопка нажата и сколько раз?
 ;сделать чтобы появлялись подсказки к кнопкам после их использования
 ;контроль настроения (сейчас оно ни на что не влияет)
 ;убрать жизни из процедуры tip 
-;убрать двойные tip (напр. пригуглении вылазит сразу 2 строки. это неправильно)
 ;уменьшать настроение только если пользователь несколько раз жмёт на одну и ту же кнопку
 ;научиться привязывать события к количеству прошедших дней (напр. не может работать 2 дня)
-;применить ProcedureReturn на проверке денег. Убрать проверку денег из кода кнопок
 ;дни идут слишком быстро. 8 событий в день?
 
 ;===Сверх-Задачи===
@@ -157,13 +155,16 @@ EndProcedure
 Procedure Money(num)
   If num < 0
     If Money < -num
-      tip("Недостаточно денег")
+      tip("Недостаточно денег нужно "+Str(-num))
       Debug "Недостаточно денег"
+      ProcedureReturn #False 
     Else
       Money + num
+      ProcedureReturn #True
     EndIf
   Else
     Money + num
+    ProcedureReturn #True
   EndIf  
 EndProcedure
 
@@ -202,9 +203,9 @@ Buy_Domain_Price = 600
 Procedure start()
   Lives_cnt = 10
   Mood_cnt = 10
-  Text_cnt = 0
-  Html_cnt = 0
-  Design_cnt = 0
+  add_text(-Text_cnt)
+  add_html(-Html_cnt)
+  add_design(-Design_cnt)
   how_many_conference = 0
   how_many_google = 0
   how_many_forum = 0
@@ -265,7 +266,7 @@ Repeat
               tip("Вы погуглили "+Str(how_many_google)+" раз. Гугл кончился")
             Case 10
               tip("Вы погуглили 10 раз. Заработали достижение Гуглер. Распечатайте и повесьте на стену")
-            Case 11
+            Case 11 To 999
               tip("Вы погуглили "+Str(how_many_google)+" раз. Дальше ничего. Правда")
           EndSelect
           
@@ -369,46 +370,31 @@ Repeat
           rtip("Вы сделали бекап")
           
         Case #Buy_Text
-          If Money >= Buy_Text_Price
-            Money(-Buy_Text_Price)
-            add_text(1)
+          If Money(-Buy_Text_Price)
             rtip("Вы купили текст за_$"+Str(Buy_Text_Price))
-          ElseIf Money < Buy_Text_Price
-            tip("Недостаточно денег. Нужно_"+Str(Buy_Text_Price))
+            add_text(1)
           EndIf
         Case #Buy_Html
-          If Money >= Buy_Html_Price
-            Money(-Buy_Html_Price)
+          If Money(-Buy_Html_Price)
             add_html(1)
             rtip("Вы купили html за_$"+Str(Buy_Html_Price))
-          ElseIf Money < Buy_Html_Price
-            tip("Недостаточно денег. Нужно "+Str(Buy_Html_Price))
           EndIf
         Case #Buy_Design
-          If Money >= Buy_Design_Price
-            Money(-Buy_Design_Price)
+          If Money(-Buy_Design_Price)
             add_design(1)
-            tip("Вы купили дизайн за "+Str(Buy_Design_Price))
-          ElseIf Money < Buy_Design_Price
-            tip("Недостаточно денег. Нужно "+Str(Buy_Design_Price))
+            tip("Вы купили дизайн за "+Str(Buy_Design_Price))  
           EndIf
         Case #Buy_Domain
-          If Money >= 600
-            Money(-600)
+          If Money(-600)
             SetGadgetText(#Buy_Domain,"Domain: Y")
             DisableGadget(#Buy_Domain,1)
             tip("Вы купили домен за 600")
-          ElseIf Money < 600
-            tip("Недостаточно денег. Нужно 600")
           EndIf
         Case #Buy_Hosting
-          If Money >= Buy_Hosting_Price
-            Money(-Buy_Hosting_Price)
+          If Money(-Buy_Hosting_Price)
             SetGadgetText(#Buy_Hosting,"Hosting: Y")
             DisableGadget(#Buy_Hosting,1)
             tip("Вы купили хостинг за "+Str(Buy_Hosting_Price))
-          ElseIf Money < Buy_Hosting_Price
-            tip("Недостаточно денег. Нужно "+Str(Buy_Hosting_Price))
           EndIf
           
         Case #Sell_Text
@@ -440,7 +426,7 @@ Repeat
           If Money >= 100
             Money(-100)
             Lives(20)
-            tip("Вы поели макарон. ♥+20")
+            tip("Вы поели макарон. ♥+20 -100$")
           Else
             Lives(1)
             rtip("Недостаточно денег Надо_$100")
@@ -449,7 +435,7 @@ Repeat
           If Money > 200
             Money(-200)
             Lives(40)
-            tip("Вы перекусили в_Макдаке. ♥+40")
+            tip("Вы перекусили в_Макдаке. ♥+40 -$200")
           Else
             Lives(1)
             rtip("Недостаточно денег на макдак Надо_$200")
@@ -459,7 +445,7 @@ Repeat
             Money(-300)
             Lives_cnt = 100
             Mood(1)
-            tip("Вы насладились домашней едой ♥full")
+            tip("Вы насладились домашней едой ♥full -$300")
           Else
             Lives(1)
             tip("Недостаточно денег на домашнюю еду Надо_$300")
