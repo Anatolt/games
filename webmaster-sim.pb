@@ -1,8 +1,7 @@
 ;===Сделал===
-;Сделал глобальную проверку денег.
-;Использовал ProcedureReturn
-;Обнулять счётчики денег, текста, кода, дизайна при смерти - сделал. Причём нашёл интересный выход. Добавить отрицательное число имеющихся тектстов/дизайна/кода
-;Починил гугление. Не работало дальше 10
+;Пеперь настроение снижается только если нажимать на одну и ту же кнопку дважды. Пришлось дописать эту процедуру в каждую кнопку
+;Если часто ходить на конференции - вмето того, чтобы брать за это деньги, вам платят. Правда только 1 раз
+;Теперь нельзя работать, если набухался с другом
 
 ;===План===
 ;1 — 6 дни оживляем каждый столбец кнопок (2 мая)
@@ -25,8 +24,6 @@
 ;сделать чтобы появлялись подсказки к кнопкам после их использования
 ;контроль настроения (сейчас оно ни на что не влияет)
 ;убрать жизни из процедуры tip 
-;уменьшать настроение только если пользователь несколько раз жмёт на одну и ту же кнопку
-;научиться привязывать события к количеству прошедших дней (напр. не может работать 2 дня)
 ;дни идут слишком быстро. 8 событий в день?
 
 ;===Сверх-Задачи===
@@ -34,6 +31,7 @@
 ;автоматическая отправка лога по http
 
 Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
+Global last_btn, now_btn, days_end
 Global how_many_conference, how_many_forum, how_many_friend, how_many_github, how_many_google, how_many_stack ;нужно для работы start()
 
 Enumeration
@@ -113,7 +111,6 @@ OpenWindow_0()
 Procedure tip(txt$)
   Day+1
   Lives_cnt-1
-  Mood_cnt-1
   say$ = FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date()) + " День:"+Str(Day)+" $:"+Str(Money)+" ☯:"+
          Str(Mood_cnt)+" ♥:"+Str(Lives_cnt)+" "+txt$
   AddGadgetItem(#journal,0,say$)
@@ -172,8 +169,12 @@ Procedure Mood(num)
   Mood_cnt + num
 EndProcedure
 
-Procedure Lives(num)
-  Lives_cnt + num
+Procedure boring()
+  last_btn = now_btn
+  now_btn = EventGadget()
+  If last_btn = now_btn
+    Mood(-1)
+  EndIf
 EndProcedure
 
 Procedure Hide(name_of_btn)
@@ -224,6 +225,21 @@ Repeat
     Show(#friend)
   EndIf
   
+  If days_end
+    If Day > days_end
+      DisableGadget(#Make_Design,0)
+      DisableGadget(#Make_Text,0)
+      DisableGadget(#Make_Html,0)
+      DisableGadget(#Make_Backup,0)
+    Else
+      DisableGadget(#Make_Design,1)
+      DisableGadget(#Make_Text,1)
+      DisableGadget(#Make_Html,1)
+      DisableGadget(#Make_Backup,1)
+    EndIf
+  EndIf
+  
+  
   ; если умер - спрятать все кнопки
   If dead
     For i = #forum To #Club
@@ -249,6 +265,7 @@ Repeat
     If event = #PB_Event_Gadget
       Select EventGadget()
         Case #google
+          boring()
           how_many_google + 1
           Select how_many_google
             Case 1
@@ -271,6 +288,7 @@ Repeat
           EndSelect
           
         Case #forum
+          boring()
           how_many_forum = how_many_forum + 1
           Select how_many_forum
             Case 1
@@ -299,6 +317,7 @@ Repeat
           EndSelect
           
         Case #stack
+          boring()
           how_many_stack = how_many_stack + 1
           Select how_many_stack
             Case 1
@@ -317,17 +336,20 @@ Repeat
           EndSelect
           
         Case #friend
+          boring()
           how_many_friend = how_many_friend + 1
           Select how_many_friend
             Case 1
               Show(#Noodles)
-              Lives(10)
+              Lives_cnt + 10
               tip("Друг принёс вам запас дошираков. И посоветовал следить за сытостью")
             Case 2
               Show(#Make_Backup)
               tip("Друг рассказал вам о пользе резервного копирования")
             Case 3
-              tip("Вы напились с другом. Не можете работать 2 дня")
+              days_end = Day+10
+              Debug days_end
+              tip("Вы напились с другом. Не можете работать 10 дней")
             Case 4
               tip("Вы снова напились с другом. Код/текст/дизайн x2")
             Case 5
@@ -338,6 +360,7 @@ Repeat
           EndSelect
           
         Case #github
+          boring()
           how_many_github = how_many_github + 1
           Select how_many_github
             Case 1
@@ -345,7 +368,7 @@ Repeat
               tip("Знания html вёрстки снизошли на вас")
             Case 2
               Show(#Sell_Html)
-              tip("Как деньги получить за говнокод свой познали")
+              rtip("Как деньги получить за говнокод свой познали")
             Case 3
               Show(#Conference)
               tip("Читая чей-то код на github вы узнали что можно сходить на конференцию")
@@ -356,41 +379,50 @@ Repeat
           EndSelect
           
         Case #Make_Text
+          boring()
           add_text(1)
           rtip("Вы написали "+Str(Text_cnt)+" текст")
         Case #Make_Html
+          boring()
           add_html(1)
           rtip("Вы наверстали "+Str(Html_cnt)+" html")
         Case #Make_Design
+          boring()
           add_design(1)
           rtip("Вы нарисовали "+Str(Design_cnt)+" psd")
         Case #Make_Backup
+          boring()
           SetGadgetText(#Make_Backup,"Backup: Y")
           DisableGadget(#Make_Backup,1)
           rtip("Вы сделали бекап")
           
         Case #Buy_Text
+          boring()
           If Money(-Buy_Text_Price)
             rtip("Вы купили текст за_$"+Str(Buy_Text_Price))
             add_text(1)
           EndIf
         Case #Buy_Html
+          boring()
           If Money(-Buy_Html_Price)
             add_html(1)
             rtip("Вы купили html за_$"+Str(Buy_Html_Price))
           EndIf
         Case #Buy_Design
+          boring()
           If Money(-Buy_Design_Price)
             add_design(1)
             tip("Вы купили дизайн за "+Str(Buy_Design_Price))  
           EndIf
         Case #Buy_Domain
+          boring()
           If Money(-600)
             SetGadgetText(#Buy_Domain,"Domain: Y")
             DisableGadget(#Buy_Domain,1)
             tip("Вы купили домен за 600")
           EndIf
         Case #Buy_Hosting
+          boring()
           If Money(-Buy_Hosting_Price)
             SetGadgetText(#Buy_Hosting,"Hosting: Y")
             DisableGadget(#Buy_Hosting,1)
@@ -398,6 +430,7 @@ Repeat
           EndIf
           
         Case #Sell_Text
+          boring()
           If Text_cnt <= 0
             tip("Вы не можете продать текст. У вас его нет")
           ElseIf Text_cnt > 0
@@ -406,6 +439,7 @@ Repeat
             tip("Вы продали текст. +"+Str(Sell_Text_Price))
           EndIf
         Case #Sell_Html
+          boring()
           If Html_cnt <= 0
             tip("Вы не можете продать html. У вас его нет")
           ElseIf Html_cnt > 0
@@ -414,6 +448,7 @@ Repeat
             tip("Вы продали html. $ +1000")
           EndIf
         Case #Sell_Design
+          boring()
           If Design_cnt <= 0
             tip("Вы не можете продать дизайн. У вас его нет")
           ElseIf Design_cnt > 0
@@ -423,52 +458,61 @@ Repeat
           EndIf
           
         Case #Noodles
+          boring()
           If Money >= 100
             Money(-100)
-            Lives(20)
+            Lives_cnt +20
             tip("Вы поели макарон. ♥+20 -100$")
           Else
-            Lives(1)
+            Lives_cnt+1
             rtip("Недостаточно денег Надо_$100")
           EndIf
         Case #McDonut
+          boring()
           If Money > 200
             Money(-200)
-            Lives(40)
+            Lives_cnt+40
             tip("Вы перекусили в_Макдаке. ♥+40 -$200")
           Else
-            Lives(1)
+            Lives_cnt+1
             rtip("Недостаточно денег на макдак Надо_$200")
           EndIf
         Case #Home_Food
+          boring()
           If Money > 300
             Money(-300)
             Lives_cnt = 100
-            Mood(1)
+            Mood(10)
             tip("Вы насладились домашней едой ♥full -$300")
           Else
-            Lives(1)
+            Lives_cnt+1
             tip("Недостаточно денег на домашнюю еду Надо_$300")
           EndIf
           
         Case #Walk
+          boring()
           Mood(2)
           tip("Вы прогулялись")
         Case #Conference
+          boring()
           how_many_conference = how_many_conference + 1
           Mood(40)
           Money(-1500)
           Select how_many_conference
             Case 1
               Show(#Buy_Hosting)
-              tip("Вы посетили конференцию. Узнали как купить хостинг. ☯+40")
+              tip("Вы посетили конференцию. Узнали как купить хостинг. -$1500 ☯+40")
             Case 2
               Show(#Buy_Domain)
-              tip("Вы посетили конференцию. Узнали как купить домен. ☯+40")
+              tip("Вы посетили конференцию. Узнали как купить домен. -$1500 ☯+40")
+            Case 4
+              Money(2500) ;1500 чтобы компенсировать затраты
+              tip("Вы так часто посещаете конференции, что вас пригласили спикером. +$1000 ☯+40")
             Case 3 To 999
               tip("Вы посетили конференцию. ☯+40")
           EndSelect
         Case #Club
+          boring()
           If Money > 5000
             how_many_club = how_many_club + 1
             Mood_cnt = 100
