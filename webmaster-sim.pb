@@ -1,30 +1,30 @@
 ;===Сделал===
-;Можно умереть от скуки и от передоза хорошим настроением
-;Если помереть со скуки с выключенной работой - она так и остаётся выключенной.
-;Нужно добавить разделительную линию поле умирания.
-;Поменять место указания валюты в макаронах
-;Передумал скрывать кнопку Win. Убрал это из задач
-;Написал код, чтобы добавлялись пояснения к кнопкам на примере Noodles, но потом отказался от этой идеи - не влазит в кнопку + итак уже есть в журнале.
-;Перенёс счетчик жизней и дней в процедуру boring
+;Убрал отключение кнопок работы в отдельную процедуру. Придумал как обойтись без двойного повторения цикла for.
+;Пофиксил баг, который вчера нашла Маша. Оказалось, что забыл запустить процедуру start когда игрок умирает от передоза положительного настроения
+;Вынес start в проверку dead. -5 строк кода
+;Можно умереть от скуки тыкая в кнопку win
+;Теперь если тыкать на кнопку создания дизайна/текста/кода больше одного раза - растёт производительность
+;Обнулил деньги в start
+;Рост производительности при тыкании на одну и ту же кнопку "Делать"
+;Вывел в конце переедание, недоедание, смерть от скуки и веселья. Усложнил финальные фразы
 
 ;===Текущие задачи===
+;при вирусной атаке избавиться от добавления дня, проверять какие открыты кнопки и обнулять именно их, натравить вирусы на хостинг и домен тоже
 ;нарисовать и внедрить иконку в приложение (процедурное сердечко или знак дзен?)
 ;добавить небольшой рандом в кол-во добавляющегося настроения и сытости
 ;ачивка: здоровье 99
 ;событие завязанное на бекап
-;rtip вы поели
-;вывести в конце переедание и недоедание
+;рост производительности после забухания с другом
 ;научиться делать фразы состоящие из рандома и из не рандома
-;какая кнопка нажата и сколько раз?
-;дни идут слишком быстро. 8 событий в день?
 
 ;===Сверх-Задачи===
 ;нарисовать интерфейс
 ;автоматическая отправка лога по http
 
-Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
+Global version$, Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
 Global last_btn, now_btn, days_end
 Global how_many_conference, how_many_forum, how_many_friend, how_many_github, how_many_google, how_many_stack ;нужно для работы start()
+version$ = "v0.2.3"
 
 Enumeration
   #Wnd
@@ -57,13 +57,13 @@ Enumeration
   #knowledge
   #eat
   #buzz
-  #comment ;удалить
+  #comment ;удалить?
   #journal
-  #WeGotWinner ;переместить наверх, чтобы скрыть
+  #WeGotWinner
 EndEnumeration
 
 Procedure OpenWindow_0(width = 670, height = 400)
-  OpenWindow(#Wnd, #PB_Ignore, #PB_Ignore, width, height, "Лялялятор вебмастера v0.2", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  OpenWindow(#Wnd, #PB_Ignore, #PB_Ignore, width, height, "Симулятор вебмастера "+version$, #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
   ButtonGadget(#google, 10, 30, 100, 25, "Google")
   ButtonGadget(#forum, 10, 60, 100, 25, "Read Forum")
   ButtonGadget(#stack, 10, 90, 100, 25, "Stackoverflow")
@@ -94,7 +94,7 @@ Procedure OpenWindow_0(width = 670, height = 400)
   TextGadget(#sell, 340, 10, 100, 20, "Заработать")
   TextGadget(#eat, 450, 10, 100, 20, "Кушать")
   TextGadget(#buzz, 560, 10, 100, 20, "Развлекаться")
-  TextGadget(#comment, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнал ↓") ; убрать в финальном релизе
+  TextGadget(#comment, 340, 150, 310, 20, "Здоровье, настрой и деньги в журнале ↓") ; убрать в финальном релизе
   ButtonGadget(#WeGotWinner, 560, 150, 100, 25, "Win")
 EndProcedure
 
@@ -107,9 +107,7 @@ Procedure tip(txt$)
   Debug say$ 
 EndProcedure
 
-; в процедуру попадает несколько слов.
-; она выстраивает их в произвольном порядке, а для первого слова делает большой первую букву
-Procedure.s rtip(txt$)
+Procedure.s rtip(txt$) ;рандомизатор фраз журнала
   txt$ = LCase(txt$)
   NewList words.s()
   For i = 1 To CountString(txt$," ")+1
@@ -143,7 +141,6 @@ Procedure Money(num)
   If num < 0
     If Money < -num
       tip("Недостаточно денег нужно "+Str(-num))
-      Debug "Недостаточно денег"
       ProcedureReturn #False 
     Else
       Money + num
@@ -166,6 +163,9 @@ Procedure boring()
   now_btn = EventGadget()
   If last_btn = now_btn
     Mood(-1)
+    ProcedureReturn #True
+  Else
+    ProcedureReturn #False
   EndIf
 EndProcedure
 
@@ -185,6 +185,12 @@ Procedure Show(name_of_btn)
   EndIf
 EndProcedure
 
+Procedure cant_work(trigger)
+  For i = #Make_Text To #Make_Backup
+    DisableGadget(i,trigger)
+  Next
+EndProcedure
+
 Sell_Text_Price = 200
 
 Buy_Text_Price = 100
@@ -198,6 +204,10 @@ Procedure start()
   days_end = 1 ; чтобы после смерти включались обратно кнопки работы
   Lives_cnt = 10
   Mood_cnt = 10
+  Money = 0
+  SetGadgetText(#Make_Backup,"Backup: N")
+  SetGadgetText(#Buy_Domain,"Domain: N")
+  SetGadgetText(#Buy_Hosting,"Hosting: N")
   add_text(-Text_cnt)
   add_html(-Html_cnt)
   add_design(-Design_cnt)
@@ -207,70 +217,70 @@ Procedure start()
   how_many_friend = 0
   how_many_stack = 0
   how_many_github = 0
-  tip("Let get this party started")
+  AddGadgetItem(#journal,0,"Тема: webmaster-sim v0.2.3")
+  AddGadgetItem(#journal,0,"tolik@at02.ru")
+  AddGadgetItem(#journal,0,"Пожалуйста, даже если не доиграете до конца, отправьте мне журнал игры на почту")
+  tip("Вы проснулись за компом и решили загуглить, как стать вебмастером")
 EndProcedure
-dead = 1 ; (стартовое состояние)
-start()
 
+dead = 1 ; (стартовое состояние)
 Repeat 
   event = WaitWindowEvent()
-  ;помощ друга в первый раз, близко к смерти (может вырубить при этом все кнопки?)
-  If Lives_cnt <= 1
+  
+  If Day > 0 And Day%20 = 0 And GetGadgetText(#Make_Backup) = "Backup: N"
+    Day + 1
+    add_text(-Text_cnt)
+    add_html(-Html_cnt)
+    add_design(-Design_cnt)
+    AddGadgetItem(#journal,0,"Злобные вирусы уничтожили все результаты вашей работы: тексты, дизайн, код")
+    ;Delay(100) ; это ппц опасная штука. не даёт нажимать другие кнопки тоже!
+  EndIf
+  
+  If Lives_cnt <= 2 ;помощь друга в первый раз, близко к смерти (может вырубить при этом все кнопки?)
     Show(#friend)
   EndIf
   
-  If days_end
-    If Day > days_end
-      DisableGadget(#Make_Design,0)
-      DisableGadget(#Make_Text,0)
-      DisableGadget(#Make_Html,0)
-      DisableGadget(#Make_Backup,0)
+  If days_end ;выключает кнопки работы, когда набухался с другом
+    If Day >= days_end
+      cant_work(0)
     Else
-      DisableGadget(#Make_Design,1)
-      DisableGadget(#Make_Text,1)
-      DisableGadget(#Make_Html,1)
-      DisableGadget(#Make_Backup,1)
+      cant_work(1)
     EndIf
   EndIf
   
-  
-  ; если умер - спрятать все кнопки
-  If dead
+  If dead ;если умер - спрятать все кнопки
     For i = #forum To #Club
       Hide(i)
     Next
     dead = 0
+    start()
   EndIf
   
-  ;проверка жизней
-  If Mood_cnt <= 0
-    Result = MessageRequester("Костлявая","Вы погибли от скуки")
+  If Mood_cnt <= 0 ;проверка жизней
+    Result = MessageRequester("Костлявая","Вы погибли от скуки. Это вот такой значек: ☯ Ничего страшного в смерти нет, каждый вебмастер знает о реинкарнации. Начните заново")
     dead = 1
     dead_bored + 1
     tip("Вы погибли от скуки")
     AddGadgetItem(#journal,0,"=============")
-    start()
   ElseIf Mood_cnt >= 101
-    Result = MessageRequester("Костлявая","Вы умерли со смеху")
+    Result = MessageRequester("Костлявая","Вы умерли от передоза положительных эмоций. Каждый вебмастер знает о реинкарнации. Начните заново")
     tip("Вы умерли со смеху")
     AddGadgetItem(#journal,0,"=============")
     dead = 1
-    fundead + 1
+    dead_fun + 1
   Else
     If Lives_cnt <= 0
-      Result = MessageRequester("Костлявая","Вы погибли от голода")
+      Result = MessageRequester("Костлявая","Вы погибли от голода. Don't starve. Ничего страшного, каждый вебмастер знает о реинкарнации. Начните заново")
       dead = 1
-      starving + 1
+      dead_starving + 1
       tip("Вы погибли от голода")
       AddGadgetItem(#journal,0,"=============")
-      start()
     ElseIf Lives_cnt >= 101
-      Result = MessageRequester("Костлявая","Куда столько жрать?")
+      Result = MessageRequester("Костлявая","Куда столько жрать? Вы погибли от разрыва желудка. Ничего страшного, каждый вебмастер знает о реинкарнации. Начните заново")
       dead = 1
-      overeat = overeat + 1
+      dead_overeat + 1
       tip("Вы погибли от переедания")
       AddGadgetItem(#journal,0,"=============")
-      start()
     Else ;если жизни есть запускаем основной цикл
       If event = #PB_Event_Gadget
         Select EventGadget()
@@ -310,10 +320,10 @@ Repeat
               Case 3
                 Show(#buy)
                 Show(#Buy_Text)
-                tip("Вы почитали форум 3 раза. Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
+                tip("Вам дали ссылку на биржу контента. Теперь вы можете покупать тексты")
               Case 4
                 Show(#Buy_Html)
-                tip("Вам дали ссылку на фриланс. Вы можете покупать html. Это дешевле чем делать самому")
+                tip("Вам дали ссылку на фриланс. Можете покупать html. Это дешевле чем делать самому")
               Case 5
                 Show(#Buy_Design)
                 tip("Вы почитали форум 5 раз. Теперь вы можете покупать дизайн. ")
@@ -322,8 +332,11 @@ Repeat
                 Buy_Text_Price = 90
                 Buy_Html_Price = 450
                 Buy_Design_Price = 750
-              Case 7 To 999
+              Case 7 To 9
                 rtip("Вы почитали форум "+Str(how_many_forum)+"_раз")
+              Case 10
+                DisableGadget(#forum,1)
+                tip("Вас забанили на форуме")
             EndSelect
             
           Case #stack
@@ -361,10 +374,11 @@ Repeat
                 Debug days_end
                 tip("Вы напились с другом. Не можете работать 10 дней")
               Case 4
-                tip("Вы снова напились с другом. Код/текст/дизайн x2")
-              Case 5
                 Show(#Club)
                 tip("Друг поведал вам о существовании клуба. Подымает настроение")
+              Case 5
+                tip("Вы снова напились с другом. Код/текст/дизайн x2")
+                days_boost = Day+10
               Case 6 To 999
                 tip("Вы поговорили с другом "+Str(how_many_friend)+" раз")
             EndSelect
@@ -378,30 +392,41 @@ Repeat
                 tip("Знания html вёрстки снизошли на вас")
               Case 2
                 Show(#Sell_Html)
-                rtip("Как деньги получить за говнокод свой познали")
+                tip("Как деньги получить за говнокод свой познали")
               Case 3
                 Show(#Conference)
                 tip("Читая чей-то код на github вы узнали что можно сходить на конференцию")
               Case 4
                 rtip("Вы покурили github 4_раза")
               Case 5 To 999
-                rtip("Вы покурили github "+Str(how_many_github)+"_раз")
+                rtip("Это не те дроиды, которых вы ищете")
             EndSelect
             
           Case #Make_Text
-            boring()
-            add_text(1)
-            rtip("Вы написали "+Str(Text_cnt)+" текст")
+            If boring()
+              add_text(2)
+              tip("Вы написали 2 текста за раз. Всего текстов:"+Str(Text_cnt))
+            Else
+              add_text(1)
+              tip("Вы написали 1 текст. Всего текстов:"+Str(Text_cnt))
+            EndIf
           Case #Make_Html
-            boring()
-            add_html(1)
-            rtip("Вы наверстали "+Str(Html_cnt)+" html")
+            If boring()
+              add_html(2)
+              tip("Вы наверстали 2 html страницы за один присест. Всего html:"+Str(Html_cnt))
+            Else
+              add_html(1)
+              tip("Вы наверстали 1 html. Всего html:"+Str(Html_cnt))
+            EndIf
           Case #Make_Design
-            boring()
-            add_design(1)
-            rtip("Вы нарисовали "+Str(Design_cnt)+" psd")
+            If boring()
+              add_design(2)
+              tip("Вы нарисовали 2 PSD. Всего дизайна:"+Str(Design_cnt))
+            Else
+              add_design(1)
+              tip("Вы нарисовали 1 PSD. Всего дизайна:"+Str(Design_cnt))
+            EndIf
           Case #Make_Backup
-            boring()
             SetGadgetText(#Make_Backup,"Backup: Y")
             DisableGadget(#Make_Backup,1)
             rtip("Вы сделали бекап")
@@ -515,14 +540,13 @@ Repeat
                 Money(2500) ;1500 чтобы компенсировать затраты
                 tip("Вы так часто посещаете конференции, что вас пригласили спикером. +$1000 ☯+40")
               Case 3 To 999
-                tip("Вы посетили конференцию. ☯+40")
+                tip("Вы посетили конференцию. ☯+40 -$1500")
             EndSelect
           Case #Club
             boring()
-            If Money > 5000
+            If Money(-5000)
               how_many_club = how_many_club + 1
               Mood_cnt = 100
-              Money(-5000)
               Select how_many_club
                 Case 1
                   tip("Вы потусили в клубе. ☯full")
@@ -532,14 +556,15 @@ Repeat
                 Case 3 To 999
                   tip("Вы потусили в клубе. ☯full")
               EndSelect
-            Else
-              tip("Недостаточно денег на клуб. Надо $5000.")
             EndIf
             
           Case #WeGotWinner
+            boring()
             If Text_cnt >= 50 And Html_cnt >= 3 And Design_cnt >= 3 And GetGadgetText(#Buy_Domain) = "Domain: Y" And GetGadgetText(#Buy_Hosting) = "Hosting: Y"
               Result = MessageRequester("Финиш","Вы сделали полноценный сайт и выиграли. Отправьте пожалуйста журнал мне на почту (указана в журнале)")
               AddGadgetItem(#journal,0,"Вы сделали полноценный сайт и выиграли. Отправьте пожалуйста журнал мне на почту")
+              AddGadgetItem(#journal,0,"dead_bored="+Str(dead_bored)+" dead_fun="+Str(dead_fun)+" dead_overeat="+Str(dead_overeat)+" dead_starving="+Str(dead_starving))
+              AddGadgetItem(#journal,0,"Тема: webmaster-sim "+version$)
               AddGadgetItem(#journal,0,"tolik@at02.ru")
             Else
               tip("Чтобы выиграть нужно 50 текстов, 3 дизайна, 3 html, домен и хостинг")
