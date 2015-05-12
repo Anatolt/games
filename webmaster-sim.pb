@@ -1,28 +1,3 @@
-===Сделал
-;Теперь можно составлять фразы из рандома и не рандома и пускать их одной строкой
-;Обнаружил косяк с кейсами конференции: были указаны кейсы от 3 до 999 и отдельно кейс 4. Сперва переделал, но потом решил вернуть обратно. Проверил - работает. То есть можно задать кейсы ;В интервале и отдельно указать кейс внутри этого интервала.
-;Поднять цену макдака(200->500) и домашней еды(300->1000)
-;Вырубить рандом на фразе про дроидов.
-;Раз вы текста за 2 написали.
-;После долгого гугления можно выгуглить все остальные кнопки, даже если сломались кнопки форума и тп.
-;Указывать сколько материалов изготовлено при бусте.
-;Переписать процедуры добавления тдк чтобы они учитывали boost.
-;Отсутствовал боринг в бекап.
-;Продажа текста работает в 2 раза, но не приносит больше денег.
-;При продаже дизайна дописать +.
-;Вместо html продаётся текст.
-;Вирусы могут сожрать текст до отрицательного состояния
-;Cнижение цен на тдк в case 9 форума, а то слишком рано
-;Переименовал часть кнопок на русский.
-;Убрал отовлюду слово "вы"
-;Рост производительности после забухания с другом
-;Научиться делать фразы состоящие из рандома и из не рандома
-;Можете продать html не
-;Не дизайн продать можете
-;Появлять друга не только при голоде (добавил в форум и гитхаб)
-;Изменил частоту вирусных атак. Теперь можно выиграть даже при отсутствии бекапа
-;Написал цикл включения всех кнопок в процедуру старт. А то если купить хостинг или забаниться на форуме - в след жизни они не работают. Одни проблемы из-за этой реинкарнации =)
-
 ;===Сверх-Задачи===
 ;нарисовать интерфейс
 ;автоматическая отправка лога по http
@@ -35,17 +10,19 @@
 ;ачивка: здоровье 99
 
 ===Рандом
-;+вирусы
 ;украли деньги
 ;повтор забухания с другом в любой момент
 ;не может работать, но только если есть хоть что-то продать
 ;Буст и кентворк не только от друга
 ;добавить небольшой рандом в кол-во добавляющегося настроения и сытости
 
-Global version$, Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood_cnt
+;мелкие правки кода
+;избавился от процедуры mood
+;избавился от переменной "цена хостинга"
+
+Global Text_cnt, Html_cnt, Design_cnt, Money, Day, Lives_cnt, Mood, version$ = "v0.2.5"
 Global last_btn, now_btn, cant_work_days_end, boost_days_end
 Global how_many_conference, how_many_forum, how_many_friend, how_many_github, how_many_google, how_many_stack ;нужно для работы start()
-version$ = "v0.2.4"
 
 Enumeration
   #Wnd
@@ -125,9 +102,44 @@ OpenWindow_0()
 
 Procedure tip(txt$)
   say$ = FormatDate("%yyyy.%mm.%dd %hh:%ii:%ss",Date()) + " День:"+Str(Day)+" $:"+Str(Money)+" ☯:"+
-         Str(Mood_cnt)+" ♥:"+Str(Lives_cnt)+" "+txt$
+         Str(Mood)+" ♥:"+Str(Lives_cnt)+" "+txt$
   AddGadgetItem(#journal,0,say$)
   Debug say$ 
+EndProcedure
+
+Procedure zeroTDK()
+  Text_cnt = 0
+  Html_cnt = 0
+  Design_cnt = 0
+  SetGadgetText(#Make_Text, "Text: 0")
+  SetGadgetText(#Make_Html, "Html: 0")
+  SetGadgetText(#Make_Design, "Design: 0")
+EndProcedure
+
+Procedure start()
+  For i = #forum To #comment
+    DisableGadget(i,0)
+  Next
+  Day = 0
+  cant_work_days_end = 1 ; чтобы после смерти включались обратно кнопки работы
+  boost_days_end = 1
+  Lives_cnt = 10
+  Mood = 10
+  Money = 0
+  zeroTDK()
+  SetGadgetText(#Make_Backup,"Backup: N")
+  SetGadgetText(#Buy_Domain,"Domain: N")
+  SetGadgetText(#Buy_Hosting,"Hosting: N")
+  how_many_conference = 0
+  how_many_google = 0
+  how_many_forum = 0
+  how_many_friend = 0
+  how_many_stack = 0
+  how_many_github = 0
+  AddGadgetItem(#journal,0,"Тема: webmaster-sim "+version$)
+  AddGadgetItem(#journal,0,"tolik@at02.ru")
+  AddGadgetItem(#journal,0,"Пожалуйста, даже если не доиграете до конца, отправьте мне журнал игры на почту")
+  tip("Просыпаемся за компом и решаем загуглить, как стать вебмастером")
 EndProcedure
 
 Procedure.s randomize(txt$) ;рандомизатор фраз журнала
@@ -154,23 +166,23 @@ Procedure Boost()
 EndProcedure
 
 Procedure add_text(numtext)
-  plus = numtext * Boost()
+  plus = numtext*Boost()
   Text_cnt + plus
-  SetGadgetText(#Make_Text,"Text: " + Str(Text_cnt))
+  SetGadgetText(#Make_Text,"Text: "+Str(Text_cnt))
   ProcedureReturn plus
 EndProcedure
 
 Procedure add_html(numhtml)
-  plus = numhtml * Boost()
+  plus = numhtml*Boost()
   Html_cnt + plus
-  SetGadgetText(#Make_Html,"Html: " + Str(Html_cnt))
+  SetGadgetText(#Make_Html,"Html: "+Str(Html_cnt))
   ProcedureReturn plus
 EndProcedure
 
 Procedure add_design(numdes)
-  plus = numdes * Boost()
+  plus = numdes*Boost()
   Design_cnt + plus
-  SetGadgetText(#Make_Design,"Design: " + Str(Design_cnt))
+  SetGadgetText(#Make_Design,"Design: "+Str(Design_cnt))
   ProcedureReturn plus
 EndProcedure
 
@@ -189,17 +201,13 @@ Procedure Money(num)
   EndIf  
 EndProcedure
 
-Procedure Mood(num)
-  Mood_cnt + num
-EndProcedure
-
 Procedure boring()
   Day+1
   Lives_cnt-1
   last_btn = now_btn
   now_btn = EventGadget()
   If last_btn = now_btn
-    Mood(-1)
+    Mood-1
     ProcedureReturn #True
   Else
     ProcedureReturn #False
@@ -232,42 +240,6 @@ Buy_Text_Price = 100
 Buy_Html_Price = 500
 Buy_Design_Price = 800
 Buy_Hosting_Price = 700
-Buy_Domain_Price = 600
-
-Procedure zeroTDK()
-  Text_cnt = 0
-  Html_cnt = 0
-  Design_cnt = 0
-  SetGadgetText(#Make_Text, "Text: 0")
-  SetGadgetText(#Make_Html, "Html: 0")
-  SetGadgetText(#Make_Design, "Design: 0")
-EndProcedure
-
-Procedure start()
-  For i = #forum To #comment
-    DisableGadget(i,0)
-  Next
-  Day = 0
-  cant_work_days_end = 1 ; чтобы после смерти включались обратно кнопки работы
-  boost_days_end = 1
-  Lives_cnt = 10
-  Mood_cnt = 10
-  Money = 0
-  zeroTDK()
-  SetGadgetText(#Make_Backup,"Backup: N")
-  SetGadgetText(#Buy_Domain,"Domain: N")
-  SetGadgetText(#Buy_Hosting,"Hosting: N")
-  how_many_conference = 0
-  how_many_google = 0
-  how_many_forum = 0
-  how_many_friend = 0
-  how_many_stack = 0
-  how_many_github = 0
-  AddGadgetItem(#journal,0,"Тема: webmaster-sim v0.2.3")
-  AddGadgetItem(#journal,0,"tolik@at02.ru")
-  AddGadgetItem(#journal,0,"Пожалуйста, даже если не доиграете до конца, отправьте мне журнал игры на почту")
-  tip("Просыпаемся за компом и решаем загуглить, как стать вебмастером")
-EndProcedure
 
 dead = 1 ; (стартовое состояние)
 Repeat 
@@ -305,13 +277,13 @@ Repeat
     start()
   EndIf
   
-  If Mood_cnt <= 0 ;проверка жизней
+  If Mood <= 0 ;проверка жизней
     Result = MessageRequester("Костлявая","Сдохли от скуки. Это вот такой значек: ☯ Ничего страшного в смерти нет, каждый вебмастер знает о реинкарнации. Начните заново")
     dead = 1
     dead_bored + 1
     tip("Сдохли от скуки")
     AddGadgetItem(#journal,0,"=============")
-  ElseIf Mood_cnt >= 101
+  ElseIf Mood >= 101
     Result = MessageRequester("Костлявая","Умерли от передоза положительных эмоций. Каждый вебмастер желает знать где сидит фазан. Начните заново")
     tip("Умерли со смеху")
     AddGadgetItem(#journal,0,"=============")
@@ -517,12 +489,12 @@ Repeat
             EndIf
           Case #Buy_Hosting
             boring()
-            If Money(-Buy_Hosting_Price)
+            If Money(-700)
               SetGadgetText(#Buy_Hosting,"Hosting: Y")
               DisableGadget(#Buy_Hosting,1)
-              tip("Купили хостинг за_$"+Str(Buy_Hosting_Price))
+              tip("Купили хостинг за_$"+Str(700))
             EndIf
-            
+
           Case #Sell_Text
             boring()
             If Text_cnt <= 0
@@ -567,7 +539,7 @@ Repeat
             boring()
             If Money(-1000)
               Lives_cnt = 100
-              Mood(10)
+              Mood+10
               tip(randomize("Насладились домашней едой")+" ♥full ☯+10 -$1000")
             Else
               Lives_cnt+1
@@ -576,12 +548,12 @@ Repeat
             
           Case #Walk
             boring()
-            Mood(10)
+            Mood+10
             tip("Прогулялись ☯+10")
           Case #Conference
             boring()
             how_many_conference = how_many_conference + 1
-            Mood(40)
+            Mood+40
             Money(-1500)
             Select how_many_conference
               Case 1
@@ -600,7 +572,7 @@ Repeat
             boring()
             If Money(-5000)
               how_many_club = how_many_club + 1
-              Mood_cnt = 100
+              Mood = 100
               Select how_many_club
                 Case 1
                   tip("Потусили в клубе. ☯full -$5000")
@@ -611,7 +583,6 @@ Repeat
                   tip("Потусили в клубе. ☯full -$5000")
               EndSelect
             EndIf
-            
           Case #WeGotWinner
             boring()
             If Text_cnt >= 50 And Html_cnt >= 3 And Design_cnt >= 3 And GetGadgetText(#Buy_Domain) = "Domain: Y" And GetGadgetText(#Buy_Hosting) = "Hosting: Y"
@@ -623,7 +594,6 @@ Repeat
             Else
               tip("Чтобы выиграть нужно 50 текстов, 3 дизайна, 3 html, домен и хостинг")
             EndIf
-            
           Case #Boost
             If Not boost_trigger
               SetGadgetText(#Boost,"Boost: Y")
