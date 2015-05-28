@@ -12,6 +12,10 @@ Enumeration buttons
   #delete
   #move
   #above
+  #up
+  #down
+  #left
+  #right
 EndEnumeration
 
 Enumeration type
@@ -163,6 +167,13 @@ ToolBarImageButton(#above,ImageID(#above))
 toggleButton(#add)
 CanvasGadget(#canvas,0,ToolBarHeight(#toolbar),#width,#height-ToolBarHeight(#toolbar))
 
+addObj(0,0,0,10,10,255,0,0,255) ;player red dot
+
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Up,#up)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Down,#down)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Left,#left)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Right,#right)
+
 For i = 0 To 10
   addRandomObj()
 Next
@@ -244,6 +255,26 @@ Repeat
           SetToolBarButtonState(#toolbar, #above, 1)
         EndIf
         
+      Case #down
+        SelectElement(all(),0)
+        all()\y + 10
+        selectedObject = -1
+        drawAll()
+      Case #up
+        SelectElement(all(),0)
+        all()\y - 10
+        selectedObject = -1
+        drawAll()
+      Case #left
+        SelectElement(all(),0)
+        all()\x - 10
+        selectedObject = -1
+        drawAll()
+      Case #right
+        SelectElement(all(),0)
+        all()\x + 10
+        selectedObject = -1
+        drawAll()
     EndSelect
   EndIf
 Until ev = #PB_Event_CloseWindow
